@@ -1,0 +1,98 @@
+[
+  {
+    "id": "old_gurgaon",
+    "name": "Old Gurgaon",
+    "zone": "Central Gurgaon",
+    "avgPrice": 25000000
+  },
+  {
+    "id": "new_gurgaon",
+    "name": "New Gurgaon",
+    "zone": "West Gurgaon",
+    "avgPrice": 18000000
+  },
+  {
+    "id": "golf_course_road",
+    "name": "Golf Course Road",
+    "zone": "Premium",
+    "avgPrice": 80000000
+  },
+  {
+    "id": "golf_course_ext",
+    "name": "Golf Course Extension Road",
+    "zone": "Premium",
+    "avgPrice": 55000000
+  },
+  {
+    "id": "dwarka_expressway",
+    "name": "Dwarka Expressway",
+    "zone": "West Gurgaon",
+    "avgPrice": 22000000
+  },
+  {
+    "id": "spr_road",
+    "name": "SPR Road",
+    "zone": "South Gurgaon",
+    "avgPrice": 15000000
+  },
+  {
+    "id": "sohna_road",
+    "name": "Sohna Road",
+    "zone": "South Gurgaon",
+    "avgPrice": 20000000
+  },
+  {
+    "id": "palam_vihar",
+    "name": "Palam Vihar",
+    "zone": "Old Gurgaon",
+    "avgPrice": 20000000
+  },
+  {
+    "id": "civil_lines",
+    "name": "Civil Lines",
+    "zone": "Old Gurgaon",
+    "avgPrice": 18000000
+  },
+  {
+    "id": "south_city",
+    "name": "South City",
+    "zone": "Central Gurgaon",
+    "avgPrice": 35000000
+  },
+  {
+    "id": "sushant_lok",
+    "name": "Sushant Lok",
+    "zone": "Central Gurgaon",
+    "avgPrice": 40000000
+  },
+  {
+    "id": "dlf_phase_1",
+    "name": "DLF Phase 1",
+    "zone": "Premium",
+    "avgPrice": 60000000
+  },
+  {
+    "id": "dlf_phase_2",
+    "name": "DLF Phase 2",
+    "zone": "Premium",
+    "avgPrice": 55000000
+  },
+  {
+    "id": "dlf_phase_3",
+    "name": "DLF Phase 3",
+    "zone": "Premium",
+    "avgPrice": 50000000
+  },
+  {
+    "id": "dlf_phase_4",
+    "name": "DLF Phase 4",
+    "zone": "Premium",
+    "avgPrice": 45000000
+  },
+  {
+    "id": "dlf_phase_5",
+    "name": "DLF Phase 5",
+    "zone": "Premium",
+    "avgPrice": 70000000
+  }
+]

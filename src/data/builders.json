@@ -1,0 +1,92 @@
+[
+  {
+    "id": "huda",
+    "name": "HUDA",
+    "tier": "government",
+    "projects": 20
+  },
+  {
+    "id": "dlf",
+    "name": "DLF Limited",
+    "tier": "luxury",
+    "projects": 10
+  },
+  {
+    "id": "m3m",
+    "name": "M3M India",
+    "tier": "premium",
+    "projects": 8
+  },
+  {
+    "id": "smartworld",
+    "name": "Smartworld Developers",
+    "tier": "premium",
+    "projects": 4
+  },
+  {
+    "id": "godrej",
+    "name": "Godrej Properties",
+    "tier": "premium",
+    "projects": 4
+  },
+  {
+    "id": "signature",
+    "name": "Signature Global",
+    "tier": "mid",
+    "projects": 4
+  },
+  {
+    "id": "paras",
+    "name": "Paras Buildtech",
+    "tier": "luxury",
+    "projects": 1
+  },
+  {
+    "id": "trump",
+    "name": "Trump Organization",
+    "tier": "ultra_luxury",
+    "projects": 1
+  },
+  {
+    "id": "sobha",
+    "name": "Sobha Limited",
+    "tier": "luxury",
+    "projects": 2
+  },
+  {
+    "id": "tata",
+    "name": "Tata Housing",
+    "tier": "luxury",
+    "projects": 1
+  },
+  {
+    "id": "experion",
+    "name": "Experion Developers",
+    "tier": "luxury",
+    "projects": 1
+  },
+  {
+    "id": "conscient",
+    "name": "Conscient Infrastructure",
+    "tier": "luxury",
+    "projects": 1
+  },
+  {
+    "id": "elan",
+    "name": "Elan Group",
+    "tier": "luxury",
+    "projects": 1
+  },
+  {
+    "id": "birla",
+    "name": "Birla Estates",
+    "tier": "premium",
+    "projects": 1
+  },
+  {
+    "id": "bptp",
+    "name": "BPTP Limited",
+    "tier": "premium",
+    "projects": 1
+  }
+]
