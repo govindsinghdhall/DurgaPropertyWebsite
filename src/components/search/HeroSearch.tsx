@@ -52,7 +52,7 @@ export function HeroSearch() {
       </div>
 
       {/* Search panel */}
-      <div className="glass mt-6 rounded-2xl p-4 shadow-2xl sm:p-6">
+      <div className="glass mt-6 rounded-2xl p-4 text-slate-900 shadow-2xl sm:p-6">
         <div className="grid gap-4 lg:grid-cols-12">
           <div className="lg:col-span-4">
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">Location</label>
@@ -68,7 +68,7 @@ export function HeroSearch() {
             <select
               value={propertyType}
               onChange={(e) => setPropertyType(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
             >
               <option value="">All Types</option>
               {PROPERTY_TYPES.map((t) => (
@@ -91,7 +91,7 @@ export function HeroSearch() {
                   setBudgetMax('')
                 }
               }}
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
             >
               <option value="">Any Budget</option>
               {BUDGET_RANGES.map((r) => (
@@ -105,7 +105,7 @@ export function HeroSearch() {
             <select
               value={bedrooms}
               onChange={(e) => setBedrooms(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
             >
               <option value="">Any BHK</option>
               {BHK_OPTIONS.map((b) => (
@@ -119,7 +119,7 @@ export function HeroSearch() {
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
             >
               <option value="">Any Status</option>
               {PROPERTY_STATUS_OPTIONS.map((s) => (
