@@ -43,19 +43,10 @@ export interface PropertiesResult {
     hasNext: boolean
     hasPrev: boolean
   }
-  fromCache: boolean
-}
-
-let offlineModeCallback: ((offline: boolean) => void) | null = null
-
-export function registerOfflineModeHandler(handler: (offline: boolean) => void) {
-  offlineModeCallback = handler
 }
 
 function useCache(params?: PropertyQuery): PropertiesResult {
-  offlineModeCallback?.(true)
-  const result = queryStaticProperties(params)
-  return { ...result, fromCache: true }
+  return queryStaticProperties(params)
 }
 
 export const propertiesService = {
@@ -73,8 +64,7 @@ export const propertiesService = {
         timeout: 5000,
       })
       if (data?.data?.length) {
-        offlineModeCallback?.(false)
-        return { data: data.data, meta: data.meta, fromCache: false }
+        return { data: data.data, meta: data.meta }
       }
       // Empty API response — use rich local inventory
       return useCache(params)
@@ -89,7 +79,6 @@ export const propertiesService = {
         timeout: 5000,
       })
       if (data?.data) {
-        offlineModeCallback?.(false)
         return data.data
       }
     } catch {
@@ -97,7 +86,6 @@ export const propertiesService = {
     }
     const cached = getStaticPropertyById(id)
     if (cached) {
-      offlineModeCallback?.(true)
       return cached
     }
     throw new Error('Property not found')

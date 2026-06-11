@@ -3,6 +3,7 @@ import type { EnrichedProperty } from '@/types'
 import { usePropertyStore } from '@/context/PropertyStoreContext'
 import { useToast } from '@/components/ui/Toast'
 import { InquiryForm } from '@/components/inquiry/InquiryForm'
+import { getWhatsAppUrl } from '@/constants/contact'
 import { formatCurrency } from '@/utils/formatters'
 
 interface PropertyLeadActionsProps {
@@ -16,9 +17,9 @@ export function PropertyLeadActions({ property }: PropertyLeadActionsProps) {
   const [visitDate, setVisitDate] = useState('')
   const [visitTime, setVisitTime] = useState('')
 
-  const whatsappUrl = `https://wa.me/919810078510?text=${encodeURIComponent(
+  const whatsappUrl = getWhatsAppUrl(
     `Hi, I'm interested in ${property.title} at ${formatCurrency(property.price)}. Please share more details.`,
-  )}`
+  )
 
   const handleScheduleVisit = () => {
     if (!visitDate || !visitTime) return
@@ -95,7 +96,7 @@ export function PropertyLeadActions({ property }: PropertyLeadActionsProps) {
         </div>
       </div>
 
-      <InquiryForm propertyId={property.id} />
+      <InquiryForm propertyId={property.id} propertyTitle={property.title} />
     </div>
   )
 }

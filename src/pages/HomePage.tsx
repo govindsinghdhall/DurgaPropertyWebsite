@@ -4,7 +4,7 @@ import { HeroSection } from '@/components/home/HeroSection'
 import { StatsBar } from '@/components/home/StatsBar'
 import { PropertySection } from '@/components/home/PropertySection'
 import { CalculatorPanel } from '@/components/calculators/CalculatorPanel'
-import { getHomepageCollections, staticToProperty } from '@/data/localData'
+import { getHomepageFeaturedProperties, staticToProperty } from '@/data/localData'
 import { MARKETPLACE_LOCALITIES } from '@/constants/locations'
 
 const OLD_GURGAON_SECTORS = [
@@ -13,56 +13,19 @@ const OLD_GURGAON_SECTORS = [
   'Sector 22', 'Sector 23', 'Palam Vihar', 'Civil Lines',
 ]
 
-const HOMEPAGE_SECTIONS = [
-  {
-    key: 'featured' as const,
-    title: 'Featured Properties in Gurgaon',
-    subtitle: 'Handpicked premium residences from DLF, M3M, Paras & more',
-    viewAllHref: '/properties',
-    viewAllLabel: 'View All Properties',
-  },
-  {
-    key: 'oldGurgaon' as const,
-    title: 'Old Gurgaon Properties',
-    subtitle: 'Underserved sectors with exceptional value — highly searched by local buyers',
-    viewAllHref: '/properties?locality=old-gurgaon',
-    viewAllLabel: 'View All Old Gurgaon Properties',
-    variant: 'highlight' as const,
-  },
-  {
-    key: 'builderFloors' as const,
-    title: 'Builder Floors Collection',
-    subtitle: 'Independent floors in established Gurgaon neighbourhoods',
-    viewAllHref: '/properties?type=Builder%20Floor',
-    viewAllLabel: 'View All Builder Floors',
-  },
-  {
-    key: 'luxury' as const,
-    title: 'Luxury Collection',
-    subtitle: 'Ultra-premium homes on Golf Course Road and beyond',
-    viewAllHref: '/properties?category=luxury',
-    viewAllLabel: 'View All Luxury Homes',
-  },
-  {
-    key: 'newGurgaon' as const,
-    title: 'New Gurgaon Collection',
-    subtitle: 'Modern developments on Dwarka Expressway & New Gurgaon corridor',
-    viewAllHref: '/properties?locality=New%20Gurgaon',
-    viewAllLabel: 'View All New Gurgaon Properties',
-  },
+const COLLECTION_LINKS = [
+  { label: 'All Properties', href: '/properties' },
+  { label: 'Old Gurgaon', href: '/properties?locality=old-gurgaon' },
+  { label: 'Builder Floors', href: '/properties?type=Builder%20Floor' },
+  { label: 'Luxury Homes', href: '/properties?category=luxury' },
+  { label: 'New Gurgaon', href: '/properties?locality=New%20Gurgaon' },
 ]
 
 export function HomePage() {
-  const collections = useMemo(() => {
-    const raw = getHomepageCollections()
-    return {
-      featured: raw.featured.map(staticToProperty),
-      oldGurgaon: raw.oldGurgaon.map(staticToProperty),
-      builderFloors: raw.builderFloors.map(staticToProperty),
-      luxury: raw.luxury.map(staticToProperty),
-      newGurgaon: raw.newGurgaon.map(staticToProperty),
-    }
-  }, [])
+  const featuredProperties = useMemo(
+    () => getHomepageFeaturedProperties().map(staticToProperty),
+    [],
+  )
 
   return (
     <div>
@@ -96,8 +59,24 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* Other localities — compact */}
+      {/* Browse collections — links only, no property cards */}
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+        <h2 className="text-lg font-bold text-slate-900">Browse Collections</h2>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {COLLECTION_LINKS.map((link) => (
+            <Link
+              key={link.href}
+              to={link.href}
+              className="rounded-full border border-brand-200 bg-brand-50 px-4 py-2 text-sm font-semibold text-brand-800 transition hover:border-brand-400 hover:bg-brand-600 hover:text-white"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* Other localities — compact */}
+      <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6">
         <h2 className="text-lg font-bold text-slate-900">Explore by Locality</h2>
         <div className="mt-4 flex flex-wrap gap-2">
           {MARKETPLACE_LOCALITIES.filter((l) => l !== 'Old Gurgaon').map((loc) => (
@@ -112,18 +91,14 @@ export function HomePage() {
         </div>
       </section>
 
-      {HOMEPAGE_SECTIONS.map((section, index) => (
-        <PropertySection
-          key={section.key}
-          index={index}
-          title={section.title}
-          subtitle={section.subtitle}
-          viewAllHref={section.viewAllHref}
-          viewAllLabel={section.viewAllLabel}
-          variant={section.variant}
-          properties={collections[section.key]}
-        />
-      ))}
+      <PropertySection
+        index={0}
+        title="Featured Properties"
+        subtitle="Six handpicked homes across Old Gurgaon, luxury corridors, and New Gurgaon — explore the full inventory on our properties page"
+        viewAllHref="/properties"
+        viewAllLabel="View All Properties"
+        properties={featuredProperties}
+      />
 
       <section className="border-y border-slate-200 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6">

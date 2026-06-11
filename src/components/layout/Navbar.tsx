@@ -57,7 +57,7 @@ export function Navbar() {
             to="/contact"
             className="hidden rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-brand-700 sm:block"
           >
-            Get in Touch
+            +91 98100 78510
           </Link>
 
           <button

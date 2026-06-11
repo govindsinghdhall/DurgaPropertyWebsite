@@ -2,7 +2,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { ToastProvider } from '@/components/ui/Toast'
 import { PropertyStoreProvider } from '@/context/PropertyStoreContext'
-import { DataSourceProvider } from '@/context/DataSourceContext'
 import { Layout } from '@/components/layout/Layout'
 import { HomePage } from '@/pages/HomePage'
 import { PropertiesPage } from '@/pages/PropertiesPage'
@@ -35,13 +34,11 @@ const router = createBrowserRouter([
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <DataSourceProvider>
-        <PropertyStoreProvider>
-          <ToastProvider>
-            <RouterProvider router={router} />
-          </ToastProvider>
-        </PropertyStoreProvider>
-      </DataSourceProvider>
+      <PropertyStoreProvider>
+        <ToastProvider>
+          <RouterProvider router={router} />
+        </ToastProvider>
+      </PropertyStoreProvider>
     </QueryClientProvider>
   )
 }

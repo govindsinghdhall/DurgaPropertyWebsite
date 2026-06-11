@@ -1,4 +1,5 @@
 import { InquiryForm } from '@/components/inquiry/InquiryForm'
+import { CONTACT_EMAIL, CONTACT_PHONE_DISPLAY, CONTACT_PHONE_TEL } from '@/constants/contact'
 
 export function ContactPage() {
   return (
@@ -15,15 +16,21 @@ export function ContactPage() {
         <div className="space-y-8">
           <div className="grid gap-4 sm:grid-cols-2">
             {[
-              { icon: '📞', label: 'Phone', value: '+91 98100 78510' },
-              { icon: '✉️', label: 'Email', value: 'ervindirsinghdhall@gmail.com' },
+              { icon: '📞', label: 'Phone', value: CONTACT_PHONE_DISPLAY, href: CONTACT_PHONE_TEL },
+              { icon: '✉️', label: 'Email', value: CONTACT_EMAIL, href: `mailto:${CONTACT_EMAIL}` },
               { icon: '📍', label: 'Office', value: 'Gurgaon, Haryana' },
               { icon: '🕐', label: 'Hours', value: 'Mon–Sun, 10 AM – 7 PM' },
             ].map((item) => (
               <div key={item.label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <span className="text-2xl" aria-hidden>{item.icon}</span>
                 <p className="mt-2 text-xs font-bold uppercase tracking-wider text-slate-400">{item.label}</p>
-                <p className="mt-1 font-semibold text-slate-800">{item.value}</p>
+                {'href' in item && item.href ? (
+                  <a href={item.href} className="mt-1 block font-semibold text-brand-700 hover:underline">
+                    {item.value}
+                  </a>
+                ) : (
+                  <p className="mt-1 font-semibold text-slate-800">{item.value}</p>
+                )}
               </div>
             ))}
           </div>

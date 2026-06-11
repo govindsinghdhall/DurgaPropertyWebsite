@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -5,6 +6,13 @@ import { useMutation } from '@tanstack/react-query'
 import { inquiriesService } from '@/api/services/inquiries.service'
 import { getErrorMessage } from '@/api/client'
 import { useToast } from '@/components/ui/Toast'
+import {
+  buildInquiryWhatsAppMessage,
+  CONTACT_PHONE_DISPLAY,
+  CONTACT_PHONE_TEL,
+  getWhatsAppUrl,
+} from '@/constants/contact'
+import type { InquiryPayload } from '@/types'
 
 const schema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -18,13 +26,23 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>
 
+interface SuccessState {
+  referenceId: string
+  payload: InquiryPayload
+}
+
 interface InquiryFormProps {
   propertyId?: string
+  propertyTitle?: string
   compact?: boolean
 }
 
-export function InquiryForm({ propertyId, compact = false }: InquiryFormProps) {
+const WHATSAPP_REDIRECT_SECONDS = 3
+
+export function InquiryForm({ propertyId, propertyTitle, compact = false }: InquiryFormProps) {
   const { showToast } = useToast()
+  const [success, setSuccess] = useState<SuccessState | null>(null)
+  const [countdown, setCountdown] = useState(WHATSAPP_REDIRECT_SECONDS)
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -32,13 +50,15 @@ export function InquiryForm({ propertyId, compact = false }: InquiryFormProps) {
 
   const mutation = useMutation({
     mutationFn: inquiriesService.submit,
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
+      setSuccess({ referenceId: data.id, payload: variables })
+      setCountdown(WHATSAPP_REDIRECT_SECONDS)
+      reset()
       showToast({
         type: 'success',
-        title: 'Inquiry saved successfully',
-        message: `${data.message} Your details are stored in our database. Reference: ${data.id.slice(0, 8)}.`,
+        title: 'Inquiry captured successfully',
+        message: 'Your details are saved. Connect with us on WhatsApp or call now.',
       })
-      reset()
     },
     onError: (err) => {
       showToast({
@@ -48,6 +68,88 @@ export function InquiryForm({ propertyId, compact = false }: InquiryFormProps) {
       })
     },
   })
+
+  const whatsappMessage = success
+    ? buildInquiryWhatsAppMessage({
+        firstName: success.payload.firstName,
+        lastName: success.payload.lastName,
+        phone: success.payload.phone,
+        referenceId: success.referenceId,
+        propertyTitle,
+        message: success.payload.message,
+      })
+    : ''
+
+  const whatsappUrl = whatsappMessage ? getWhatsAppUrl(whatsappMessage) : ''
+
+  useEffect(() => {
+    if (!success) return
+
+    const timer = window.setInterval(() => {
+      setCountdown((prev) => (prev <= 1 ? 0 : prev - 1))
+    }, 1000)
+
+    const redirect = window.setTimeout(() => {
+      window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
+    }, WHATSAPP_REDIRECT_SECONDS * 1000)
+
+    return () => {
+      window.clearInterval(timer)
+      window.clearTimeout(redirect)
+    }
+  }, [success, whatsappUrl])
+
+  if (success) {
+    return (
+      <div
+        className={`rounded-2xl border border-green-200 bg-gradient-to-br from-green-50 to-white p-6 shadow-sm ${compact ? '' : 'lg:p-8'}`}
+        role="status"
+        aria-live="polite"
+      >
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-2xl text-green-600">
+          ✓
+        </div>
+        <h3 className="mt-5 text-xl font-bold text-slate-900">Your inquiry has been captured!</h3>
+        <p className="mt-2 text-sm leading-relaxed text-slate-600">
+          Thank you, {success.payload.firstName}. Our team has received your details and saved them securely.
+          Reference: <strong className="text-slate-800">{success.referenceId.slice(0, 8).toUpperCase()}</strong>
+        </p>
+
+        <p className="mt-4 rounded-xl bg-white px-4 py-3 text-sm text-slate-600 ring-1 ring-green-100">
+          {countdown > 0 ? (
+            <>Opening WhatsApp in <strong>{countdown}s</strong> so you can connect with us instantly…</>
+          ) : (
+            <>WhatsApp should be open — tap below if it didn&apos;t launch.</>
+          )}
+        </p>
+
+        <div className="mt-6 grid gap-3 sm:grid-cols-2">
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 rounded-xl bg-green-600 py-3.5 text-sm font-bold text-white transition hover:bg-green-700"
+          >
+            Chat on WhatsApp
+          </a>
+          <a
+            href={CONTACT_PHONE_TEL}
+            className="flex items-center justify-center gap-2 rounded-xl border-2 border-brand-600 bg-white py-3.5 text-sm font-bold text-brand-700 transition hover:bg-brand-50"
+          >
+            Call {CONTACT_PHONE_DISPLAY}
+          </a>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setSuccess(null)}
+          className="mt-4 w-full text-sm font-medium text-slate-500 transition hover:text-brand-600"
+        >
+          Submit another inquiry
+        </button>
+      </div>
+    )
+  }
 
   return (
     <form
@@ -70,7 +172,7 @@ export function InquiryForm({ propertyId, compact = false }: InquiryFormProps) {
         {propertyId ? 'Inquire About This Property' : 'Get a Free Consultation'}
       </h3>
       <p className="mt-1 text-sm text-slate-500">
-        Submit your details and our team will reach out. Your inquiry becomes a lead in our CRM.
+        Submit your details — we&apos;ll save your inquiry and connect you on WhatsApp or phone right away.
       </p>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -104,7 +206,7 @@ export function InquiryForm({ propertyId, compact = false }: InquiryFormProps) {
         disabled={mutation.isPending}
         className="mt-6 w-full rounded-xl bg-brand-600 py-3 font-semibold text-white transition hover:bg-brand-700 disabled:opacity-60"
       >
-        {mutation.isPending ? 'Submitting...' : 'Submit Inquiry'}
+        {mutation.isPending ? 'Saving your inquiry...' : 'Submit Inquiry'}
       </button>
     </form>
   )

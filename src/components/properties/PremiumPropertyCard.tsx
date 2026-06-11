@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { EnrichedProperty } from '@/types'
+import { getWhatsAppUrl } from '@/constants/contact'
 import { formatCurrency, formatLabel } from '@/utils/formatters'
 import { usePropertyStore } from '@/context/PropertyStoreContext'
 import { useToast } from '@/components/ui/Toast'
@@ -27,9 +28,9 @@ export function PremiumPropertyCard({ property, priority = false }: PremiumPrope
     }
   }
 
-  const whatsappUrl = `https://wa.me/919810078510?text=${encodeURIComponent(
+  const whatsappUrl = getWhatsAppUrl(
     `Hi, I'm interested in ${property.title} listed at ${formatCurrency(property.price)}. ${window.location.origin}/properties/${property.id}`,
-  )}`
+  )
 
   return (
     <article className="card-premium card-glass group overflow-hidden rounded-2xl">

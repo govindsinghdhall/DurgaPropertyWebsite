@@ -260,78 +260,29 @@ function pickByProjects(projectNames: string[]): StaticProperty[] {
   return picked.slice(0, SECTION_LIMIT)
 }
 
-function pickOldGurgaonSectors(sectors: string[]): StaticProperty[] {
-  const picked: StaticProperty[] = []
-  for (const sector of sectors) {
-    const match = CACHE.find(
-      (p) =>
-        p.locality === 'Old Gurgaon' &&
-        (p.projectName.includes(`Sector ${sector}`) || p.sector.includes(`Sector ${sector}`)),
-    )
-    if (match && !picked.some((p) => p.id === match.id)) picked.push(match)
-  }
-  return picked.slice(0, SECTION_LIMIT)
+const HOMEPAGE_PROPERTY_LIMIT = 6
+
+/** Exactly 6 curated properties for the homepage — full inventory lives on /properties */
+export function getHomepageFeaturedProperties(): StaticProperty[] {
+  return pickByProjects([
+    'DLF Camellias',
+    'HUDA Floors Sector 4',
+    'DLF Privana South',
+    'M3M Mansion',
+    'Paras Quartier',
+    'Trump Towers Gurgaon',
+  ]).slice(0, HOMEPAGE_PROPERTY_LIMIT)
 }
 
-function pickBuilderFloors(): StaticProperty[] {
-  const targets = [
-    { sector: 'Sector 4', locality: 'Old Gurgaon' },
-    { sector: 'Sector 14', locality: 'Old Gurgaon' },
-    { sector: 'Palam Vihar', locality: 'Palam Vihar' },
-    { locality: 'DLF Phase 1' },
-    { locality: 'Sushant Lok' },
-    { locality: 'South City' },
-  ]
-  const picked: StaticProperty[] = []
-  for (const t of targets) {
-    const match = CACHE.find(
-      (p) =>
-        p.propertyType === 'Builder Floor' &&
-        (!t.sector || p.sector.includes(t.sector) || p.projectName.includes(t.sector)) &&
-        p.locality.toLowerCase().includes((t.locality ?? '').toLowerCase()),
-    )
-    if (match && !picked.some((p) => p.id === match.id)) picked.push(match)
-  }
-  if (picked.length < SECTION_LIMIT) {
-    for (const p of CACHE) {
-      if (p.propertyType === 'Builder Floor' && !picked.some((x) => x.id === p.id)) {
-        picked.push(p)
-        if (picked.length >= SECTION_LIMIT) break
-      }
-    }
-  }
-  return picked.slice(0, SECTION_LIMIT)
-}
-
-/** Curated homepage collections — exactly 6 properties each, no full inventory */
+/** @deprecated Use getHomepageFeaturedProperties — homepage shows 6 properties total */
 export function getHomepageCollections() {
+  const featured = getHomepageFeaturedProperties()
   return {
-    featured: pickByProjects([
-      'DLF Camellias',
-      'DLF Privana South',
-      'M3M Mansion',
-      'Paras Quartier',
-      'Trump Towers Gurgaon',
-      'Tata Primanti',
-    ]),
-    oldGurgaon: pickOldGurgaonSectors(['4', '5', '7', '9', '10', '14']),
-    builderFloors: pickBuilderFloors(),
-    luxury: pickByProjects([
-      'DLF Camellias',
-      'DLF Magnolias',
-      'DLF Aralias',
-      'M3M Mansion',
-      'Paras Quartier',
-      'Trump Towers Gurgaon',
-    ]),
-    newGurgaon: pickByProjects([
-      'DLF Privana South',
-      'DLF Privana West',
-      'Smartworld One DXP',
-      'Godrej Aristocrat',
-      'M3M Crown',
-      'Sobha Aranya',
-    ]),
+    featured,
+    oldGurgaon: featured,
+    builderFloors: featured,
+    luxury: featured,
+    newGurgaon: featured,
   }
 }
 
