@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom'
 import { Navbar } from './Navbar'
 import { Footer } from './Footer'
 import { CompareBar } from '@/components/properties/CompareBar'
+import { WhatsAppFloat } from './WhatsAppFloat'
 
 export function Layout() {
   return (
@@ -12,6 +13,7 @@ export function Layout() {
       </main>
       <Footer />
       <CompareBar />
+      <WhatsAppFloat />
     </div>
   )
 }
