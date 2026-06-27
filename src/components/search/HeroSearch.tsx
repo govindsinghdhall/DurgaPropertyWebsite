@@ -24,7 +24,10 @@ export function HeroSearch() {
     if (propertyType) params.set('type', propertyType)
     if (budgetMin) params.set('minPrice', budgetMin)
     if (budgetMax) params.set('maxPrice', budgetMax)
-    if (bedrooms) params.set('bedrooms', bedrooms)
+    if (bedrooms) {
+      const bhkLabel = BHK_OPTIONS.find((b) => (b.replace(/\D/g, '') || '0') === bedrooms)
+      if (bhkLabel) params.set('bhk', bhkLabel)
+    }
     if (status) params.set('status', status)
     navigate(`/properties?${params.toString()}`)
   }
@@ -52,7 +55,13 @@ export function HeroSearch() {
       </div>
 
       {/* Search panel */}
-      <div className="glass mt-6 rounded-2xl p-4 text-slate-900 shadow-2xl sm:p-6">
+      <form
+        className="glass mt-6 rounded-2xl p-4 text-slate-900 shadow-2xl sm:p-6"
+        onSubmit={(e) => {
+          e.preventDefault()
+          handleSearch()
+        }}
+      >
         <div className="grid gap-4 lg:grid-cols-12">
           <div className="lg:col-span-12">
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">Location</label>
@@ -130,8 +139,7 @@ export function HeroSearch() {
         </div>
 
         <button
-          type="button"
-          onClick={handleSearch}
+          type="submit"
           className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 py-4 text-base font-bold text-white shadow-lg transition hover:bg-brand-700 hover:shadow-xl sm:w-auto sm:px-12"
         >
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -139,7 +147,7 @@ export function HeroSearch() {
           </svg>
           Search Properties
         </button>
-      </div>
+      </form>
     </div>
   )
 }

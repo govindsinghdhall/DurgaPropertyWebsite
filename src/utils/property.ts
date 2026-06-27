@@ -1,3 +1,5 @@
+import type { PropertyQuery } from '@/api/services/properties.service'
+import { BHK_OPTIONS } from '@/constants/filters'
 import type { Property, PropertyCategory, PropertyFilters } from '@/types'
 
 const BHK_TO_API: Record<string, string> = {
@@ -13,11 +15,56 @@ const TYPE_TO_API: Record<string, string> = {
   Apartment: 'apartment',
   'Builder Floor': 'builder_floor',
   Villa: 'villa',
+  'Independent House': 'independent_house',
   Plot: 'plot',
+  Commercial: 'commercial',
   Office: 'office',
   Shop: 'shop',
   Warehouse: 'warehouse',
   'Coworking Space': 'coworking_space',
+}
+
+/** Map UI property-type labels to inventory labels for local search */
+export const PROPERTY_TYPE_SEARCH_ALIASES: Record<string, string[]> = {
+  apartment: ['apartment'],
+  'builder floor': ['builder floor'],
+  villa: ['villa'],
+  'independent house': ['independent house', 'villa'],
+  plot: ['plot'],
+  commercial: ['commercial'],
+  office: ['commercial', 'office'],
+  shop: ['commercial', 'shop'],
+  warehouse: ['commercial', 'warehouse'],
+  'coworking space': ['commercial', 'coworking'],
+}
+
+export function bedroomsToBhkLabel(bedrooms: string): string | null {
+  const match = BHK_OPTIONS.find((b) => (b.replace(/\D/g, '') || '0') === bedrooms)
+  return match ?? null
+}
+
+export function normalizePropertyQuery(params?: PropertyQuery): PropertyQuery {
+  if (!params) return {}
+
+  const normalized: PropertyQuery = { ...params }
+
+  if (params.bedrooms && !params.bhk?.length) {
+    const bhkLabel = bedroomsToBhkLabel(params.bedrooms)
+    if (bhkLabel) {
+      normalized.bhk = [bhkLabel]
+    }
+    delete normalized.bedrooms
+  }
+
+  if (params.propertyTypes?.length) {
+    normalized.propertyTypes = params.propertyTypes.filter(Boolean)
+  }
+
+  if (params.status) {
+    normalized.status = params.status.toLowerCase().replace(/ /g, '_')
+  }
+
+  return normalized
 }
 
 const AGE_TO_API: Record<string, string> = {

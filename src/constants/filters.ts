@@ -11,8 +11,8 @@ export const PROPERTY_CATEGORIES: { id: PropertyCategory; label: string; icon: s
 ]
 
 export const PROPERTY_TYPES = [
-  'Apartment', 'Builder Floor', 'Villa', 'Plot', 'Office',
-  'Shop', 'Warehouse', 'Coworking Space',
+  'Apartment', 'Builder Floor', 'Villa', 'Independent House', 'Plot', 'Commercial',
+  'Office', 'Shop', 'Warehouse', 'Coworking Space',
 ]
 
 export const BHK_OPTIONS = ['Studio', '1 BHK', '2 BHK', '3 BHK', '4 BHK', '5+ BHK']
@@ -45,7 +45,7 @@ export const POSSESSION_OPTIONS = [
 export const POSTED_BY_OPTIONS = ['Durga Property']
 
 export const PROPERTY_STATUS_OPTIONS = [
-  'Available', 'Under Offer', 'Sold', 'Rented',
+  'Available', 'Under Offer',
 ]
 
 export const BUILDERS = [

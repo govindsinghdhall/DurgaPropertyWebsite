@@ -1,6 +1,7 @@
 import type { PaginationMeta, Property } from '@/types'
 import type { StaticBuilder, StaticLocality, StaticProperty } from '@/types/staticProperty'
 import type { PropertyQuery } from '@/api/services/properties.service'
+import { PROPERTY_TYPE_SEARCH_ALIASES } from '@/utils/property'
 import staticProperties from './properties.json'
 import staticBuilders from './builders.json'
 import staticLocalities from './localities.json'
@@ -70,14 +71,35 @@ export function staticToProperty(sp: StaticProperty): Property {
 
 function matchesBhk(p: StaticProperty, bhkFilters: string[]): boolean {
   if (!bhkFilters.length) return true
-  const config = p.configuration.toLowerCase()
   const beds = p.bedrooms
   return bhkFilters.some((b) => {
     if (b === 'Studio') return beds === 0
     if (b === '5+ BHK') return beds >= 5
     const match = b.match(/(\d+)/)
-    return match ? beds === Number(match[1]) : config.includes(b.toLowerCase())
+    return match ? beds === Number(match[1]) : false
   })
+}
+
+function matchesPropertyType(p: StaticProperty, filterType: string): boolean {
+  const key = filterType.toLowerCase().replace(/_/g, ' ')
+  const aliases = PROPERTY_TYPE_SEARCH_ALIASES[key] ?? [key]
+  const propType = p.propertyType.toLowerCase()
+  return aliases.some((alias) => propType.includes(alias) || alias.includes(propType))
+}
+
+function matchesCategory(p: StaticProperty, category: string): boolean {
+  switch (category) {
+    case 'commercial':
+      return p.listingCategory === 'commercial' || p.propertyType.toLowerCase() === 'commercial'
+    case 'plot':
+      return p.listingCategory === 'plot' || p.propertyType.toLowerCase() === 'plot'
+    case 'luxury':
+      return p.listingCategory === 'luxury' || p.luxury === true
+    case 'new_projects':
+      return p.listingCategory === 'new_projects'
+    default:
+      return p.listingCategory === category
+  }
 }
 
 function matchesSearch(p: StaticProperty, q: string): boolean {
@@ -101,7 +123,7 @@ export function queryStaticProperties(params?: PropertyQuery): {
   }
 
   if (params?.category && params.category !== 'buy') {
-    results = results.filter((p) => p.listingCategory === params.category)
+    results = results.filter((p) => matchesCategory(p, params.category!))
   }
 
   if (params?.city) {
@@ -123,6 +145,21 @@ export function queryStaticProperties(params?: PropertyQuery): {
     )
   }
 
+  if (params?.pincode) {
+    results = results.filter((p) =>
+      p.pincode.includes(params.pincode!),
+    )
+  }
+
+  if (params?.landmark) {
+    const landmark = params.landmark.toLowerCase()
+    results = results.filter((p) =>
+      [p.address, ...p.highlights, p.sector, p.locality].some((field) =>
+        field?.toLowerCase().includes(landmark),
+      ),
+    )
+  }
+
   if (params?.minPrice) {
     results = results.filter((p) => p.price >= Number(params.minPrice))
   }
@@ -140,8 +177,8 @@ export function queryStaticProperties(params?: PropertyQuery): {
   }
 
   if (params?.bedrooms) {
-    const min = Number(params.bedrooms)
-    results = results.filter((p) => p.bedrooms >= min)
+    const beds = Number(params.bedrooms)
+    results = results.filter((p) => p.bedrooms === beds)
   }
 
   if (params?.bhk?.length) {
@@ -150,9 +187,7 @@ export function queryStaticProperties(params?: PropertyQuery): {
 
   if (params?.propertyTypes?.length) {
     results = results.filter((p) =>
-      params.propertyTypes!.some((t) =>
-        p.propertyType.toLowerCase().includes(t.toLowerCase().replace(/_/g, ' ')),
-      ),
+      params.propertyTypes!.some((t) => matchesPropertyType(p, t)),
     )
   }
 
@@ -179,7 +214,7 @@ export function queryStaticProperties(params?: PropertyQuery): {
 
   if (params?.status) {
     const s = params.status.toLowerCase().replace(/ /g, '_')
-    results = results.filter((p) => p.status.toLowerCase().includes(s))
+    results = results.filter((p) => p.status.toLowerCase() === s || p.status.toLowerCase().includes(s))
   }
 
   if (params?.builder) {

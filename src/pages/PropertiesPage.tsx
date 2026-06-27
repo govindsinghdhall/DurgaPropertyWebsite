@@ -32,6 +32,7 @@ export function PropertiesPage() {
       minPrice: searchParams.get('minPrice') || '',
       maxPrice: searchParams.get('maxPrice') || '',
       bedrooms: searchParams.get('bedrooms') || '',
+      bhk: searchParams.get('bhk') ? [searchParams.get('bhk')!] : [],
       status: searchParams.get('status') || '',
       city: searchParams.get('city') || 'Gurgaon',
       builder: searchParams.get('builder') || '',

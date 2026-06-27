@@ -1,5 +1,5 @@
 import type { ApiEnvelope, Property, PropertyFilters } from '@/types'
-import { filtersToApiParams } from '@/utils/property'
+import { filtersToApiParams, normalizePropertyQuery } from '@/utils/property'
 import { queryStaticProperties, getStaticPropertyById } from '@/data/localData'
 import { apiClient } from '../client'
 
@@ -51,13 +51,15 @@ function useCache(params?: PropertyQuery): PropertiesResult {
 
 export const propertiesService = {
   async getAll(params?: PropertyQuery): Promise<PropertiesResult> {
+    const query = normalizePropertyQuery(params)
+
     try {
       const apiParams = {
-        page: params?.page,
-        limit: params?.limit,
-        sortBy: params?.sortBy,
-        sortOrder: params?.sortOrder,
-        ...filtersToApiParams((params ?? {}) as Partial<PropertyFilters>),
+        page: query.page,
+        limit: query.limit,
+        sortBy: query.sortBy,
+        sortOrder: query.sortOrder,
+        ...filtersToApiParams((query ?? {}) as Partial<PropertyFilters>),
       }
       const { data } = await apiClient.get<ApiEnvelope<Property[]>>('/public/properties', {
         params: apiParams,
@@ -66,10 +68,9 @@ export const propertiesService = {
       if (data?.data?.length) {
         return { data: data.data, meta: data.meta }
       }
-      // Empty API response — use rich local inventory
-      return useCache(params)
+      return useCache(query)
     } catch {
-      return useCache(params)
+      return useCache(query)
     }
   },
 
