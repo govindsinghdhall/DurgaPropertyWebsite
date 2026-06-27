@@ -67,15 +67,28 @@ export function Footer() {
       </div>
 
       <div className="border-t border-slate-800">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-5 sm:px-6">
-          <p className="text-xs text-slate-500">
-            © {new Date().getFullYear()} Durga Property. All rights reserved. RERA compliant platform.
-          </p>
-          <div className="flex gap-4 text-xs text-slate-500">
-            <span>Privacy Policy</span>
-            <span>Terms of Service</span>
-            <span>Sitemap</span>
+        <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <p className="text-xs text-slate-500">
+              © {new Date().getFullYear()} Durga Property. All rights reserved. RERA compliant platform.
+            </p>
+            <div className="flex gap-4 text-xs text-slate-500">
+              <span>Privacy Policy</span>
+              <span>Terms of Service</span>
+              <span>Sitemap</span>
+            </div>
           </div>
+          <p className="mt-3 text-center text-xs text-slate-500 sm:text-left">
+            Website built by{' '}
+            <a
+              href="https://brisavo.vercel.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-slate-400 transition hover:text-white"
+            >
+              Brisavo Technologies
+            </a>
+          </p>
         </div>
       </div>
     </footer>
