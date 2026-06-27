@@ -9,6 +9,14 @@ export function formatCurrency(amount: string | number): string {
   }).format(value)
 }
 
+export function formatListingPrice(price: string | number, listingCategory?: string): string {
+  const formatted = formatCurrency(price)
+  if (listingCategory === 'rent' || listingCategory === 'pg') {
+    return `${formatted}/mo`
+  }
+  return formatted
+}
+
 export function formatLabel(value: string): string {
   return value
     .toLowerCase()

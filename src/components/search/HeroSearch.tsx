@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { PROPERTY_CATEGORIES, BHK_OPTIONS, BUDGET_RANGES, PROPERTY_TYPES, PROPERTY_STATUS_OPTIONS } from '@/constants/filters'
+import { PROPERTY_CATEGORIES, BHK_OPTIONS, BUDGET_RANGES, RENT_BUDGET_RANGES, PG_BUDGET_RANGES, PROPERTY_TYPES, PROPERTY_STATUS_OPTIONS } from '@/constants/filters'
 import { usePropertyStore } from '@/context/PropertyStoreContext'
 import type { PropertyCategory } from '@/types'
 import { SearchAutocomplete } from './SearchAutocomplete'
@@ -15,6 +15,11 @@ export function HeroSearch() {
   const [budgetMax, setBudgetMax] = useState('')
   const [bedrooms, setBedrooms] = useState('')
   const [status, setStatus] = useState('')
+
+  const budgetRanges =
+    category === 'rent' ? RENT_BUDGET_RANGES
+    : category === 'pg' ? PG_BUDGET_RANGES
+    : BUDGET_RANGES
 
   const handleSearch = () => {
     if (location.trim()) addRecentSearch(location.trim())
@@ -40,7 +45,11 @@ export function HeroSearch() {
           <button
             key={cat.id}
             type="button"
-            onClick={() => setCategory(cat.id)}
+            onClick={() => {
+              setCategory(cat.id)
+              setBudgetMin('')
+              setBudgetMax('')
+            }}
             className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${
               category === cat.id
                 ? 'bg-white text-brand-700 shadow-md'
@@ -91,7 +100,7 @@ export function HeroSearch() {
             <select
               value={budgetMax}
               onChange={(e) => {
-                const range = BUDGET_RANGES.find((r) => String(r.max) === e.target.value)
+                const range = budgetRanges.find((r) => String(r.max) === e.target.value)
                 if (range) {
                   setBudgetMin(String(range.min))
                   setBudgetMax(String(range.max))
@@ -103,7 +112,7 @@ export function HeroSearch() {
               className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
             >
               <option value="">Any Budget</option>
-              {BUDGET_RANGES.map((r) => (
+              {budgetRanges.map((r) => (
                 <option key={r.label} value={r.max}>{r.label}</option>
               ))}
             </select>

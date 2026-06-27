@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import type { Property } from '@/types'
 import { PropertyImage } from './PropertyImage'
-import { formatCurrency, formatLabel } from '@/utils/formatters'
+import { formatListingPrice, formatLabel } from '@/utils/formatters'
 
 interface PropertyListRowProps {
   property: Property
@@ -51,7 +51,7 @@ export function PropertyListRow({ property }: PropertyListRowProps) {
 
         <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-2xl font-extrabold text-brand-700">{formatCurrency(property.price)}</p>
+            <p className="text-2xl font-extrabold text-brand-700">{formatListingPrice(property.price, property.listingCategory)}</p>
             <p className="text-xs text-slate-500">
               ₹{property.pricePerSqFt.toLocaleString('en-IN')}/sq ft · {property.configuration ?? `${property.bedrooms} BHK`} · {property.area} sq ft
             </p>

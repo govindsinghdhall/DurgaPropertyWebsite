@@ -10,7 +10,7 @@ import { PropertyMap } from '@/components/property/PropertyMap'
 import { CalculatorPanel } from '@/components/calculators/CalculatorPanel'
 import { usePropertyStore } from '@/context/PropertyStoreContext'
 import { normalizeProperty, normalizeProperties, getSimilarProperties } from '@/utils/property'
-import { formatCurrency, formatLabel } from '@/utils/formatters'
+import { formatCurrency, formatListingPrice, formatLabel } from '@/utils/formatters'
 import { calculateEMI } from '@/utils/calculators'
 
 export function PropertyDetailPage() {
@@ -102,7 +102,7 @@ export function PropertyDetailPage() {
           {/* Specs grid */}
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {[
-              { label: 'Price', value: formatCurrency(enriched.price) },
+              { label: 'Price', value: formatListingPrice(enriched.price, enriched.listingCategory) },
               { label: 'Price/sq ft', value: `₹${enriched.pricePerSqFt.toLocaleString('en-IN')}` },
               { label: 'Area', value: `${enriched.area} sq ft` },
               { label: 'BHK', value: `${enriched.bedrooms ?? 0} BHK` },
@@ -123,8 +123,10 @@ export function PropertyDetailPage() {
             <h2 className="text-lg font-bold text-slate-900">Price Breakdown & EMI</h2>
             <div className="mt-4 grid gap-4 sm:grid-cols-3">
               <div>
-                <p className="text-sm text-slate-500">Property Price</p>
-                <p className="text-xl font-bold text-brand-700">{formatCurrency(price)}</p>
+                <p className="text-sm text-slate-500">
+                  {enriched.listingCategory === 'rent' || enriched.listingCategory === 'pg' ? 'Monthly Rent' : 'Property Price'}
+                </p>
+                <p className="text-xl font-bold text-brand-700">{formatListingPrice(price, enriched.listingCategory)}</p>
               </div>
               <div>
                 <p className="text-sm text-slate-500">Est. EMI (80% loan, 20yr)</p>

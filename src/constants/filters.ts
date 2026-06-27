@@ -25,6 +25,22 @@ export const BUDGET_RANGES = [
   { label: '₹5Cr+', min: 50000000, max: 999999999 },
 ]
 
+export const RENT_BUDGET_RANGES = [
+  { label: 'Under ₹15K/mo', min: 0, max: 15000 },
+  { label: '₹15K - ₹30K/mo', min: 15000, max: 30000 },
+  { label: '₹30K - ₹50K/mo', min: 30000, max: 50000 },
+  { label: '₹50K - ₹80K/mo', min: 50000, max: 80000 },
+  { label: '₹80K+/mo', min: 80000, max: 999999999 },
+]
+
+export const PG_BUDGET_RANGES = [
+  { label: 'Under ₹10K/mo', min: 0, max: 10000 },
+  { label: '₹10K - ₹15K/mo', min: 10000, max: 15000 },
+  { label: '₹15K - ₹20K/mo', min: 15000, max: 20000 },
+  { label: '₹20K - ₹30K/mo', min: 20000, max: 30000 },
+  { label: '₹30K+/mo', min: 30000, max: 999999999 },
+]
+
 export const AMENITY_OPTIONS = [
   'Swimming Pool', 'Gym', 'Club House', 'Power Backup', 'Lift',
   'Parking', 'Security', 'Garden', 'Kids Play Area', 'EV Charging',

@@ -144,6 +144,47 @@ const COMM_CONFIGS = [
   { config: 'SCO Plot', beds: 0, baths: 0, area: [1200, 4000] },
 ]
 
+const PG_CONFIGS = [
+  { config: 'Single Occupancy', beds: 1, baths: 1, area: [120, 200] },
+  { config: 'Double Sharing', beds: 1, baths: 1, area: [150, 250] },
+  { config: 'Triple Sharing', beds: 1, baths: 1, area: [180, 280] },
+  { config: '1 BHK PG', beds: 1, baths: 1, area: [400, 650] },
+]
+
+const RENT_CONFIGS = [
+  { config: '1 BHK', beds: 1, baths: 1, area: [550, 750] },
+  { config: '2 BHK', beds: 2, baths: 2, area: [900, 1200] },
+  { config: '3 BHK', beds: 3, baths: 2, area: [1200, 1600] },
+  { config: '3 BHK Floor', beds: 3, baths: 3, area: [1500, 2000] },
+  { config: 'Studio', beds: 0, baths: 1, area: [350, 550] },
+]
+
+/** Affordable hubs for rental inventory */
+const RENT_HUBS = [
+  { name: 'Sector 14 Rental Homes', builder: 'Durga Property', locality: 'Old Gurgaon', sector: 'Sector 14' },
+  { name: 'Sector 21 Rental Homes', builder: 'Durga Property', locality: 'Old Gurgaon', sector: 'Sector 21' },
+  { name: 'Palam Vihar Rentals', builder: 'Durga Property', locality: 'Palam Vihar', sector: 'Palam Vihar' },
+  { name: 'Sushant Lok Rentals', builder: 'Durga Property', locality: 'Sushant Lok', sector: 'Sushant Lok' },
+  { name: 'DLF Phase 1 Rentals', builder: 'DLF Limited', locality: 'DLF Phase 1', sector: 'DLF Phase 1' },
+  { name: 'South City Rentals', builder: 'Durga Property', locality: 'South City', sector: 'South City' },
+  { name: 'Sector 57 Rentals', builder: 'Durga Property', locality: 'New Gurgaon', sector: 'Sector 57' },
+  { name: 'Sohna Road Rentals', builder: 'Signature Global', locality: 'Sohna Road', sector: 'Sector 49' },
+  { name: 'Dwarka Expressway Rentals', builder: 'Smartworld Developers', locality: 'Dwarka Expressway', sector: 'Sector 104' },
+  { name: 'Civil Lines Rentals', builder: 'Durga Property', locality: 'Civil Lines', sector: 'Civil Lines' },
+]
+
+/** PG / co-living hubs near offices and metro */
+const PG_HUBS = [
+  { name: 'Udyog Vihar PG Residency', builder: 'Durga Property', locality: 'Old Gurgaon', sector: 'Udyog Vihar' },
+  { name: 'Cyber City Co-Living', builder: 'Durga Property', locality: 'DLF Phase 2', sector: 'DLF Phase 2' },
+  { name: 'MG Road PG Homes', builder: 'Durga Property', locality: 'Old Gurgaon', sector: 'MG Road' },
+  { name: 'Sector 45 PG Living', builder: 'Durga Property', locality: 'Golf Course Road', sector: 'Sector 45' },
+  { name: 'Sector 62 Co-Living', builder: 'Durga Property', locality: 'New Gurgaon', sector: 'Sector 62' },
+  { name: 'Manesar PG Hub', builder: 'Durga Property', locality: 'New Gurgaon', sector: 'Manesar' },
+  { name: 'IFFCO Chowk PG', builder: 'Durga Property', locality: 'Sushant Lok', sector: 'IFFCO Chowk' },
+  { name: 'Golf Course Ext PG', builder: 'Durga Property', locality: 'Golf Course Extension Road', sector: 'Sector 67' },
+]
+
 const AMENITIES_POOL = [
   'Swimming Pool', 'Gym', 'Club House', 'Power Backup', 'Lift', 'Parking',
   'Security', 'Garden', 'Kids Play Area', 'EV Charging',
@@ -221,6 +262,105 @@ function listingCategory(project, typeKey, price) {
   return 'buy'
 }
 
+function buildProperty({
+  counter,
+  project,
+  typeKey,
+  cfg,
+  listingCat,
+  price,
+  titleSuffix = '',
+  descriptionPrefix = '',
+}) {
+  const area = rand(cfg.area[0], cfg.area[1])
+  const pricePerSqft = area > 0 ? Math.round(price / area) : 0
+  const id = `dp-gur-${String(counter).padStart(4, '0')}`
+  const slug = `${slugify(project.name)}-${slugify(cfg.config)}-${counter}`
+  const possession = listingCat === 'rent' || listingCat === 'pg' ? 'Ready To Move' : pick(['Ready To Move', 'Under Construction', 'Dec 2026', 'Mar 2027', 'Jun 2028'])
+  const status = possession === 'Ready To Move' ? 'available' : pick(['available', 'under_offer'])
+  const coords = coordsForSector(project.sector, counter)
+  const amenities = pickN(AMENITIES_POOL, rand(4, 8))
+  const featured = listingCat === 'rent' ? iFeatured(counter) : project.luxury && counter % 12 === 0
+  const images = pickN(IMG_IDS, rand(3, 5)).map((imgId, idx) => ({
+    id: `${id}-img-${idx}`,
+    url: `https://images.unsplash.com/photo-${imgId}?w=1200&q=80`,
+    caption: `${project.name} view ${idx + 1}`,
+    isPrimary: idx === 0,
+  }))
+  const typeLabelStr = typeLabel(typeKey)
+  const titleBase = listingCat === 'pg'
+    ? `${cfg.config} at ${project.name}`
+    : `${cfg.config} in ${project.name}`
+
+  return {
+    id,
+    title: `${titleBase}${titleSuffix}`,
+    slug,
+    projectName: project.name,
+    builder: project.builder,
+    sector: project.sector,
+    locality: project.locality,
+    city: 'Gurgaon',
+    state: 'Haryana',
+    pincode: String(rand(122001, 122505)),
+    propertyType: listingCat === 'pg' ? 'Apartment' : typeLabelStr,
+    configuration: cfg.config,
+    areaSqft: area,
+    price,
+    pricePerSqft,
+    status,
+    possession,
+    propertyAge: possession === 'Ready To Move' ? 'ready_to_move' : 'under_construction',
+    possessionStatus: possession === 'Ready To Move' ? 'immediate' : pick(['within_3_months', 'within_6_months', 'within_1_year']),
+    rera: listingCat !== 'pg',
+    reraId: listingCat !== 'pg' ? `HRERA-${rand(10000, 99999)}` : '',
+    featured,
+    luxury: false,
+    listingCategory: listingCat,
+    bedrooms: cfg.beds,
+    bathrooms: cfg.baths,
+    description: `${descriptionPrefix}Premium ${cfg.config} ${typeLabelStr.toLowerCase()} at ${project.name} by ${project.builder} in ${project.locality}, ${project.sector}. Strategically located with excellent connectivity, modern amenities, and professional management. Ideal for ${listingCat === 'pg' ? 'working professionals and students' : listingCat === 'rent' ? 'families and professionals seeking quality rental homes' : 'end-use and investment'} in Gurgaon's thriving real estate market.`,
+    amenities,
+    images,
+    coordinates: coords,
+    nearbySchools: pickN(SCHOOLS, 3).map((n) => `${n} (${rand(1, 5)}.${rand(0, 9)} km)`),
+    nearbyHospitals: pickN(HOSPITALS, 2).map((n) => `${n} (${rand(2, 8)}.${rand(0, 9)} km)`),
+    nearbyMetroStations: pickN(METROS, 2).map((n) => `${n} (${rand(1, 6)}.${rand(0, 9)} km)`),
+    highlights: pickN([
+      'RERA Approved', 'Premium Location', 'High ROI Potential', 'Green Surroundings',
+      'Gated Community', 'Vastu Compliant', 'Corner Unit', 'Park Facing',
+      'Metro Connectivity', 'Builder Reputation', 'Ready to Move', 'New Launch',
+      'Fully Furnished', 'Meals Included', 'Wi-Fi Included', 'Housekeeping',
+    ], rand(3, 5)),
+    address: `${project.name}, ${project.sector}, ${project.locality}`,
+    isVerified: true,
+    hasVideoTour: rand(0, 1) === 1,
+    postedBy: 'Durga Property',
+    furnishing: listingCat === 'rent' || listingCat === 'pg'
+      ? pick(['fully_furnished', 'semi_furnished'])
+      : pick(['fully_furnished', 'semi_furnished', 'unfurnished']),
+    facing: pick(['north', 'south', 'east', 'west']),
+  }
+}
+
+function iFeatured(counter) {
+  return counter % 15 === 0
+}
+
+function monthlyRentForConfig(cfg) {
+  if (cfg.beds === 0) return rand(12000, 22000)
+  if (cfg.beds === 1) return rand(18000, 35000)
+  if (cfg.beds === 2) return rand(28000, 55000)
+  if (cfg.beds === 3) return rand(40000, 85000)
+  return rand(55000, 120000)
+}
+
+function monthlyPgForConfig(cfg) {
+  if (cfg.config.includes('Sharing')) return rand(7000, 14000)
+  if (cfg.config.includes('Single')) return rand(12000, 22000)
+  return rand(15000, 32000)
+}
+
 const properties = []
 let counter = 0
 
@@ -233,67 +373,54 @@ for (const project of PROJECTS) {
     const cfg = pick(configs)
     const area = rand(cfg.area[0], cfg.area[1])
     const price = rand(project.minP, project.maxP)
-    const pricePerSqft = Math.round(price / area)
-    const id = `dp-gur-${String(counter).padStart(4, '0')}`
-    const slug = `${slugify(project.name)}-${slugify(cfg.config)}-${counter}`
-    const possession = pick(['Ready To Move', 'Under Construction', 'Dec 2026', 'Mar 2027', 'Jun 2028'])
-    const status = possession === 'Ready To Move' ? 'available' : pick(['available', 'under_offer'])
-    const coords = coordsForSector(project.sector, counter)
-    const amenities = pickN(AMENITIES_POOL, rand(4, 8))
-    const featured = project.luxury && i < 2
-    const images = pickN(IMG_IDS, rand(3, 5)).map((imgId, idx) => ({
-      id: `${id}-img-${idx}`,
-      url: `https://images.unsplash.com/photo-${imgId}?w=1200&q=80`,
-      caption: `${project.name} view ${idx + 1}`,
-      isPrimary: idx === 0,
-    }))
+    const listingCat = listingCategory(project, typeKey, price)
 
-    properties.push({
-      id,
-      title: `${cfg.config} in ${project.name}`,
-      slug,
-      projectName: project.name,
-      builder: project.builder,
-      sector: project.sector,
-      locality: project.locality,
-      city: 'Gurgaon',
-      state: 'Haryana',
-      pincode: String(rand(122001, 122505)),
-      propertyType: typeLabel(typeKey),
-      configuration: cfg.config,
-      areaSqft: area,
+    properties.push(buildProperty({
+      counter,
+      project,
+      typeKey,
+      cfg,
+      listingCat,
       price,
-      pricePerSqft,
-      status,
-      possession,
-      propertyAge: possession === 'Ready To Move' ? 'ready_to_move' : 'under_construction',
-      possessionStatus: possession === 'Ready To Move' ? 'immediate' : pick(['within_3_months', 'within_6_months', 'within_1_year']),
-      rera: true,
-      reraId: `HRERA-${rand(10000, 99999)}`,
-      featured,
-      luxury: project.luxury,
-      listingCategory: listingCategory(project, typeKey, price),
-      bedrooms: cfg.beds,
-      bathrooms: cfg.baths,
-      description: `Premium ${cfg.config} ${typeLabel(typeKey).toLowerCase()} at ${project.name} by ${project.builder} in ${project.locality}, ${project.sector}. Strategically located with excellent connectivity, modern amenities, and RERA-approved development. Ideal for end-use and investment in Gurgaon's thriving real estate market.`,
-      amenities,
-      images,
-      coordinates: coords,
-      nearbySchools: pickN(SCHOOLS, 3).map((n) => `${n} (${rand(1, 5)}.${rand(0, 9)} km)`),
-      nearbyHospitals: pickN(HOSPITALS, 2).map((n) => `${n} (${rand(2, 8)}.${rand(0, 9)} km)`),
-      nearbyMetroStations: pickN(METROS, 2).map((n) => `${n} (${rand(1, 6)}.${rand(0, 9)} km)`),
-      highlights: pickN([
-        'RERA Approved', 'Premium Location', 'High ROI Potential', 'Green Surroundings',
-        'Gated Community', 'Vastu Compliant', 'Corner Unit', 'Park Facing',
-        'Metro Connectivity', 'Builder Reputation', 'Ready to Move', 'New Launch',
-      ], rand(3, 5)),
-      address: `${project.name}, ${project.sector}, ${project.locality}`,
-      isVerified: true,
-      hasVideoTour: rand(0, 1) === 1,
-      postedBy: 'Durga Property',
-      furnishing: pick(['fully_furnished', 'semi_furnished', 'unfurnished']),
-      facing: pick(['north', 'south', 'east', 'west']),
-    })
+    }))
+  }
+}
+
+for (const hub of RENT_HUBS) {
+  const perHub = rand(7, 10)
+  for (let i = 0; i < perHub; i++) {
+    counter++
+    const cfg = pick(RENT_CONFIGS)
+    const price = monthlyRentForConfig(cfg)
+    properties.push(buildProperty({
+      counter,
+      project: hub,
+      typeKey: cfg.config.includes('Floor') ? 'builder_floor' : 'apartment',
+      cfg,
+      listingCat: 'rent',
+      price,
+      titleSuffix: ' for Rent',
+      descriptionPrefix: 'Available for rent — ',
+    }))
+  }
+}
+
+for (const hub of PG_HUBS) {
+  const perHub = rand(6, 9)
+  for (let i = 0; i < perHub; i++) {
+    counter++
+    const cfg = pick(PG_CONFIGS)
+    const price = monthlyPgForConfig(cfg)
+    properties.push(buildProperty({
+      counter,
+      project: hub,
+      typeKey: 'apartment',
+      cfg,
+      listingCat: 'pg',
+      price,
+      titleSuffix: ' · PG / Co-Living',
+      descriptionPrefix: 'PG and co-living — ',
+    }))
   }
 }
 
@@ -303,3 +430,9 @@ writeFileSync(join(OUT, 'builders.json'), JSON.stringify(BUILDERS, null, 2))
 writeFileSync(join(OUT, 'properties.json'), JSON.stringify(properties))
 
 console.log(`Generated ${properties.length} properties, ${BUILDERS.length} builders, ${LOCALITIES.length} localities`)
+console.log('Categories:', Object.fromEntries(
+  ['buy', 'rent', 'pg', 'commercial', 'plot', 'luxury', 'new_projects'].map((c) => [
+    c,
+    properties.filter((p) => p.listingCategory === c).length,
+  ]),
+))

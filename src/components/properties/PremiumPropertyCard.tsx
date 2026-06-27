@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import type { EnrichedProperty } from '@/types'
 import { getWhatsAppUrl } from '@/constants/contact'
-import { formatCurrency, formatLabel } from '@/utils/formatters'
+import { formatListingPrice, formatLabel } from '@/utils/formatters'
 import { usePropertyStore } from '@/context/PropertyStoreContext'
 import { useToast } from '@/components/ui/Toast'
 import { PropertyImage } from './PropertyImage'
@@ -29,7 +29,7 @@ export function PremiumPropertyCard({ property, priority = false }: PremiumPrope
   }
 
   const whatsappUrl = getWhatsAppUrl(
-    `Hi, I'm interested in ${property.title} listed at ${formatCurrency(property.price)}. ${window.location.origin}/properties/${property.id}`,
+    `Hi, I'm interested in ${property.title} listed at ${formatListingPrice(property.price, property.listingCategory)}. ${window.location.origin}/properties/${property.id}`,
   )
 
   return (
@@ -91,7 +91,7 @@ export function PremiumPropertyCard({ property, priority = false }: PremiumPrope
       <div className="p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-2xl font-extrabold text-brand-700">{formatCurrency(property.price)}</p>
+            <p className="text-2xl font-extrabold text-brand-700">{formatListingPrice(property.price, property.listingCategory)}</p>
             <p className="text-xs text-slate-500">₹{property.pricePerSqFt.toLocaleString('en-IN')}/sq ft</p>
           </div>
           <span className="shrink-0 rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">

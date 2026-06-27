@@ -97,6 +97,10 @@ function matchesCategory(p: StaticProperty, category: string): boolean {
       return p.listingCategory === 'luxury' || p.luxury === true
     case 'new_projects':
       return p.listingCategory === 'new_projects'
+    case 'rent':
+      return p.listingCategory === 'rent'
+    case 'pg':
+      return p.listingCategory === 'pg'
     default:
       return p.listingCategory === category
   }
