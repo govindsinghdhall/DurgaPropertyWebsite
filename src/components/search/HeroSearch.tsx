@@ -54,7 +54,7 @@ export function HeroSearch() {
       {/* Search panel */}
       <div className="glass mt-6 rounded-2xl p-4 text-slate-900 shadow-2xl sm:p-6">
         <div className="grid gap-4 lg:grid-cols-12">
-          <div className="lg:col-span-4">
+          <div className="lg:col-span-12">
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">Location</label>
             <SearchAutocomplete
               value={location}
@@ -63,7 +63,7 @@ export function HeroSearch() {
             />
           </div>
 
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-3">
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">Property Type</label>
             <select
               value={propertyType}
@@ -77,7 +77,7 @@ export function HeroSearch() {
             </select>
           </div>
 
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-3">
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">Budget Range</label>
             <select
               value={budgetMax}
@@ -100,7 +100,7 @@ export function HeroSearch() {
             </select>
           </div>
 
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-3">
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">Bedrooms</label>
             <select
               value={bedrooms}
@@ -114,7 +114,7 @@ export function HeroSearch() {
             </select>
           </div>
 
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-3">
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">Status</label>
             <select
               value={status}

@@ -14,7 +14,7 @@ export function SearchAutocomplete({
   value,
   onChange,
   onSelect,
-  placeholder = 'Search city, locality, sector, landmark...',
+  placeholder = 'Search by city, locality, sector, or landmark in Gurgaon',
   className = '',
 }: SearchAutocompleteProps) {
   const { recentSearches } = usePropertyStore()
@@ -79,7 +79,7 @@ export function SearchAutocomplete({
           aria-label="Location search"
           aria-expanded={open}
           aria-autocomplete="list"
-          className="w-full rounded-xl border border-slate-200 bg-white py-3.5 pl-12 pr-24 text-sm text-slate-900 placeholder:text-slate-500 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+          className="w-full rounded-xl border border-slate-200 bg-white py-3.5 pl-12 pr-12 text-sm text-slate-900 placeholder:text-slate-500 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100 sm:text-base"
         />
         <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
           <button

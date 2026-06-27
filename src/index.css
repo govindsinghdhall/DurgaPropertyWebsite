@@ -75,6 +75,66 @@ body {
   }
 }
 
+/* Homepage hero — consultant wallpaper (subject on right) */
+.hero-wallpaper {
+  background-image: url('/images/hero-wallpaper.png');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: 72% center;
+}
+
+@media (max-width: 1023px) {
+  .hero-wallpaper {
+    background-position: 65% 20%;
+  }
+}
+
+@media (max-width: 639px) {
+  .hero-wallpaper {
+    background-position: 58% top;
+  }
+}
+
+.hero-wallpaper-overlay {
+  background:
+    linear-gradient(
+      105deg,
+      rgba(7, 39, 73, 0.94) 0%,
+      rgba(7, 39, 73, 0.82) 38%,
+      rgba(11, 60, 110, 0.45) 62%,
+      rgba(15, 23, 42, 0.18) 100%
+    ),
+    linear-gradient(
+      to top,
+      rgba(7, 39, 73, 0.88) 0%,
+      transparent 42%
+    );
+}
+
+.hero-wallpaper-glow {
+  background: radial-gradient(
+    ellipse 55% 45% at 18% 35%,
+    rgba(251, 191, 36, 0.14),
+    transparent 70%
+  );
+}
+
+.hero-search-shell {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 24px 48px rgba(7, 39, 73, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.hero-search-shell .glass {
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.12);
+}
+
 /* Glassmorphism */
 .glass {
   background: rgba(255, 255, 255, 0.72);
