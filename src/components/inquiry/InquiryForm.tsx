@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useMutation } from '@tanstack/react-query'
 import { inquiriesService } from '@/api/services/inquiries.service'
+import { notifyLeadByEmail } from '@/api/services/lead-email.service'
 import { getErrorMessage } from '@/api/client'
 import { useToast } from '@/components/ui/Toast'
 import {
@@ -49,7 +50,30 @@ export function InquiryForm({ propertyId, propertyTitle, compact = false }: Inqu
   })
 
   const mutation = useMutation({
-    mutationFn: inquiriesService.submit,
+    mutationFn: async (variables: InquiryPayload) => {
+      try {
+        const data = await inquiriesService.submit(variables)
+        try {
+          await notifyLeadByEmail({
+            payload: variables,
+            referenceId: data.id,
+            propertyTitle,
+          })
+        } catch {
+          /* CRM saved the lead; FormSubmit email is best-effort */
+        }
+        return data
+      } catch {
+        await notifyLeadByEmail({
+          payload: variables,
+          propertyTitle,
+        })
+        return {
+          id: `email-${Date.now()}`,
+          message: 'Your inquiry was emailed to our team.',
+        }
+      }
+    },
     onSuccess: (data, variables) => {
       setSuccess({ referenceId: data.id, payload: variables })
       setCountdown(WHATSAPP_REDIRECT_SECONDS)
