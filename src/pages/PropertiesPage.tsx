@@ -57,7 +57,7 @@ export function PropertiesPage() {
     {
       ...filters,
       ...sortParams,
-      limit: 600,
+      limit: 2000,
       featured: filters.featured || undefined,
       reraOnly: filters.reraOnly || undefined,
       readyToMove: filters.readyToMove || undefined,

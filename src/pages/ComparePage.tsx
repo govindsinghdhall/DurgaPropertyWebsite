@@ -24,7 +24,7 @@ export function ComparePage() {
 
   const { data } = useQuery({
     queryKey: ['properties', 'compare'],
-    queryFn: () => propertiesService.getAll({ limit: 600 }),
+    queryFn: () => propertiesService.getAll({ limit: 2000 }),
   })
 
   const enriched = normalizeProperties(data?.data ?? [])

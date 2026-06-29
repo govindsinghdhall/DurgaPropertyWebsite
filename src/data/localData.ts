@@ -114,6 +114,15 @@ function matchesSearch(p: StaticProperty, q: string): boolean {
   return haystack.includes(q.toLowerCase())
 }
 
+/** All demo properties matching filters (no pagination slice). */
+export function queryAllStaticProperties(params?: PropertyQuery): Property[] {
+  return queryStaticProperties({
+    ...params,
+    page: 1,
+    limit: CACHE.length + 1,
+  }).data
+}
+
 export function queryStaticProperties(params?: PropertyQuery): {
   data: Property[]
   meta: PaginationMeta

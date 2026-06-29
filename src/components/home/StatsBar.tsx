@@ -1,17 +1,29 @@
+import { useQuery } from '@tanstack/react-query'
 import { PLATFORM_STATS } from '@/constants/locations'
-
-const stats = [
-  { label: 'Total Properties', value: PLATFORM_STATS.totalProperties, icon: '🏘️' },
-  { label: 'Active Buyers', value: PLATFORM_STATS.activeBuyers, icon: '👥' },
-  { label: 'Happy Families', value: PLATFORM_STATS.happyFamilies, icon: '🏡' },
-  { label: 'Cities Covered', value: PLATFORM_STATS.citiesCovered, icon: '🌆' },
-]
+import { publicService } from '@/api/services/public.service'
 
 export function StatsBar() {
+  const { data: stats } = useQuery({
+    queryKey: ['public', 'stats'],
+    queryFn: () => publicService.getStats(),
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const totalProperties = stats
+    ? `${stats.totalProperties}+`
+    : PLATFORM_STATS.totalProperties
+
+  const statsItems = [
+    { label: 'Total Properties', value: totalProperties, icon: '🏘️' },
+    { label: 'Active Buyers', value: PLATFORM_STATS.activeBuyers, icon: '👥' },
+    { label: 'Happy Families', value: PLATFORM_STATS.happyFamilies, icon: '🏡' },
+    { label: 'Cities Covered', value: PLATFORM_STATS.citiesCovered, icon: '🌆' },
+  ]
+
   return (
     <section className="border-y border-slate-200 bg-white">
       <div className="mx-auto grid max-w-7xl grid-cols-2 gap-6 px-4 py-10 sm:px-6 lg:grid-cols-4">
-        {stats.map((stat, i) => (
+        {statsItems.map((stat, i) => (
           <div
             key={stat.label}
             className="animate-fade-in-up text-center"

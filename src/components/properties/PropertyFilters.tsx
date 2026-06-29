@@ -1,14 +1,16 @@
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import {
   AMENITY_OPTIONS, BHK_OPTIONS, FACING_OPTIONS,
   FURNISHING_OPTIONS, POSSESSION_OPTIONS,
   PROPERTY_AGE_OPTIONS, PROPERTY_TYPES,
 } from '@/constants/filters'
 import { GURGAON_LOCALITIES, GURGAON_SECTORS, POSSESSION_YEARS } from '@/constants/locations'
+import { publicService } from '@/api/services/public.service'
 import { getStaticBuilders } from '@/data/localData'
 import type { PropertyFilters as Filters } from '@/types'
 
-const BUILDER_NAMES = getStaticBuilders().map((b) => b.name)
+const STATIC_BUILDER_NAMES = getStaticBuilders().map((b) => b.name)
 
 interface PropertyFiltersProps {
   filters: Filters
@@ -63,6 +65,15 @@ function CheckboxGroup({
 }
 
 export function PropertyFilters({ filters, onChange, onReset, resultCount }: PropertyFiltersProps) {
+  const { data: builders = [] } = useQuery({
+    queryKey: ['public', 'builders'],
+    queryFn: () => publicService.getBuilders(),
+    staleTime: 5 * 60 * 1000,
+  })
+  const builderNames = builders.length
+    ? builders.map((builder) => builder.name)
+    : STATIC_BUILDER_NAMES
+
   const update = (patch: Partial<Filters>) => onChange({ ...filters, ...patch })
 
   const toggleArray = (key: keyof Filters, val: string) => {
@@ -242,7 +253,7 @@ export function PropertyFilters({ filters, onChange, onReset, resultCount }: Pro
           className={inputClass}
         >
           <option value="">All Builders</option>
-          {BUILDER_NAMES.map((b) => (
+          {builderNames.map((b) => (
             <option key={b} value={b}>{b}</option>
           ))}
         </select>

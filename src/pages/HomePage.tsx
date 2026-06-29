@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom'
-import { useMemo } from 'react'
 import { HeroSection } from '@/components/home/HeroSection'
 import { StatsBar } from '@/components/home/StatsBar'
 import { PropertySection } from '@/components/home/PropertySection'
 import { CalculatorPanel } from '@/components/calculators/CalculatorPanel'
-import { getHomepageFeaturedProperties, staticToProperty } from '@/data/localData'
+import { usePropertiesQuery } from '@/hooks/usePropertiesQuery'
+import { normalizeProperties } from '@/utils/property'
 import { MARKETPLACE_LOCALITIES } from '@/constants/locations'
 
 const OLD_GURGAON_SECTORS = [
@@ -22,10 +22,11 @@ const COLLECTION_LINKS = [
 ]
 
 export function HomePage() {
-  const featuredProperties = useMemo(
-    () => getHomepageFeaturedProperties().map(staticToProperty),
-    [],
+  const { data: featuredResult } = usePropertiesQuery(
+    ['properties', 'featured'],
+    { limit: 6, featured: true, sortBy: 'createdAt', sortOrder: 'desc' },
   )
+  const featuredProperties = normalizeProperties(featuredResult?.data ?? [])
 
   return (
     <div>
