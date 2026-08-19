@@ -81,12 +81,12 @@ export function Footer() {
           <p className="mt-3 text-center text-xs text-slate-500 sm:text-left">
             Website built by{' '}
             <a
-              href="https://brisavo.vercel.app"
+              href="https://brosavo.com"
               target="_blank"
               rel="noopener noreferrer"
               className="font-medium text-slate-400 transition hover:text-white"
             >
-              Brisavo Technologies
+              Brosavo Technologies
             </a>
           </p>
         </div>
