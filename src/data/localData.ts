@@ -1,31 +1,149 @@
 import type { PaginationMeta, Property } from '@/types'
-import type { StaticBuilder, StaticLocality, StaticProperty } from '@/types/staticProperty'
+import type {
+  StaticBuilder,
+  StaticLocality,
+  StaticProperty,
+} from '@/types/staticProperty'
 import type { PropertyQuery } from '@/api/services/properties.service'
 import { PROPERTY_TYPE_SEARCH_ALIASES } from '@/utils/property'
-import staticProperties from './properties.json'
-import staticBuilders from './builders.json'
-import staticLocalities from './localities.json'
 
-const CACHE: StaticProperty[] = staticProperties as StaticProperty[]
-const BUILDERS: StaticBuilder[] = staticBuilders as StaticBuilder[]
-const LOCALITIES: StaticLocality[] = staticLocalities as StaticLocality[]
+/**
+ * Optional local JSON data.
+ *
+ * These files are optional:
+ * - properties.json
+ * - builders.json
+ * - localities.json
+ *
+ * If a file is missing or cannot be parsed, an empty array is used.
+ *
+ * This means the website can run without local/demo properties.
+ */
 
+/**
+ * Vite import.meta.glob is used without `import: 'default'`
+ * so it works correctly with Vite 8 / Rolldown JSON handling.
+ *
+ * `?raw` gives us the file contents as text when the file exists.
+ */
+const propertyModules = import.meta.glob('./properties.json', {
+  eager: true,
+  query: '?raw',
+})
+
+const builderModules = import.meta.glob('./builders.json', {
+  eager: true,
+  query: '?raw',
+})
+
+const localityModules = import.meta.glob('./localities.json', {
+  eager: true,
+  query: '?raw',
+})
+
+/**
+ * Safely extract and parse optional JSON.
+ */
+function parseOptionalJson<T>(
+  modules: Record<string, unknown>,
+): T[] {
+  const moduleValue = Object.values(modules)[0]
+
+  if (!moduleValue) {
+    return []
+  }
+
+  try {
+    let raw: unknown = moduleValue
+
+    /**
+     * Depending on the Vite/Rolldown output, the glob value
+     * can either be the raw string or an object containing
+     * a default value.
+     */
+    if (
+      typeof moduleValue === 'object' &&
+      moduleValue !== null &&
+      'default' in moduleValue
+    ) {
+      raw = (moduleValue as { default: unknown }).default
+    }
+
+    if (typeof raw !== 'string') {
+      return []
+    }
+
+    const parsed: unknown = JSON.parse(raw)
+
+    return Array.isArray(parsed) ? (parsed as T[]) : []
+  } catch {
+    /**
+     * Invalid/missing optional JSON should never break
+     * the application.
+     */
+    return []
+  }
+}
+
+/**
+ * Local/demo property inventory.
+ *
+ * If properties.json does not exist:
+ * CACHE = []
+ */
+const CACHE: StaticProperty[] =
+  parseOptionalJson<StaticProperty>(propertyModules)
+
+/**
+ * Optional builders data.
+ *
+ * If builders.json does not exist:
+ * BUILDERS = []
+ */
+const BUILDERS: StaticBuilder[] =
+  parseOptionalJson<StaticBuilder>(builderModules)
+
+/**
+ * Optional localities data.
+ *
+ * If localities.json does not exist:
+ * LOCALITIES = []
+ */
+const LOCALITIES: StaticLocality[] =
+  parseOptionalJson<StaticLocality>(localityModules)
+
+/**
+ * Static builders
+ */
 export function getStaticBuilders() {
   return BUILDERS
 }
 
+/**
+ * Static localities
+ */
 export function getStaticLocalities() {
   return LOCALITIES
 }
 
-export function staticToProperty(sp: StaticProperty): Property {
+/**
+ * Convert a StaticProperty into the application's
+ * standard Property type.
+ */
+export function staticToProperty(
+  sp: StaticProperty,
+): Property {
   const area = sp.areaSqft
+
   return {
     id: sp.id,
     title: sp.title,
     description: sp.description,
-    listingCategory: sp.listingCategory as Property['listingCategory'],
-    type: sp.propertyType.toLowerCase().replace(/ /g, '_'),
+    listingCategory:
+      sp.listingCategory as Property['listingCategory'],
+    type: sp.propertyType
+      .toLowerCase()
+      .replace(/ /g, '_'),
     status: sp.status,
     price: sp.price,
     pricePerSqFt: sp.pricePerSqft,
@@ -69,53 +187,134 @@ export function staticToProperty(sp: StaticProperty): Property {
   }
 }
 
-function matchesBhk(p: StaticProperty, bhkFilters: string[]): boolean {
-  if (!bhkFilters.length) return true
+/**
+ * Match BHK filters.
+ */
+function matchesBhk(
+  p: StaticProperty,
+  bhkFilters: string[],
+): boolean {
+  if (!bhkFilters.length) {
+    return true
+  }
+
   const beds = p.bedrooms
+
   return bhkFilters.some((b) => {
-    if (b === 'Studio') return beds === 0
-    if (b === '5+ BHK') return beds >= 5
+    if (b === 'Studio') {
+      return beds === 0
+    }
+
+    if (b === '5+ BHK') {
+      return beds >= 5
+    }
+
     const match = b.match(/(\d+)/)
-    return match ? beds === Number(match[1]) : false
+
+    return match
+      ? beds === Number(match[1])
+      : false
   })
 }
 
-function matchesPropertyType(p: StaticProperty, filterType: string): boolean {
-  const key = filterType.toLowerCase().replace(/_/g, ' ')
-  const aliases = PROPERTY_TYPE_SEARCH_ALIASES[key] ?? [key]
-  const propType = p.propertyType.toLowerCase()
-  return aliases.some((alias) => propType.includes(alias) || alias.includes(propType))
+/**
+ * Match property type filters.
+ */
+function matchesPropertyType(
+  p: StaticProperty,
+  filterType: string,
+): boolean {
+  const key = filterType
+    .toLowerCase()
+    .replace(/_/g, ' ')
+
+  const aliases =
+    PROPERTY_TYPE_SEARCH_ALIASES[key] ?? [key]
+
+  const propType =
+    p.propertyType.toLowerCase()
+
+  return aliases.some(
+    (alias) =>
+      propType.includes(alias) ||
+      alias.includes(propType),
+  )
 }
 
-function matchesCategory(p: StaticProperty, category: string): boolean {
+/**
+ * Match listing category.
+ */
+function matchesCategory(
+  p: StaticProperty,
+  category: string,
+): boolean {
   switch (category) {
     case 'commercial':
-      return p.listingCategory === 'commercial' || p.propertyType.toLowerCase() === 'commercial'
+      return (
+        p.listingCategory === 'commercial' ||
+        p.propertyType.toLowerCase() ===
+          'commercial'
+      )
+
     case 'plot':
-      return p.listingCategory === 'plot' || p.propertyType.toLowerCase() === 'plot'
+      return (
+        p.listingCategory === 'plot' ||
+        p.propertyType.toLowerCase() === 'plot'
+      )
+
     case 'luxury':
-      return p.listingCategory === 'luxury' || p.luxury === true
+      return (
+        p.listingCategory === 'luxury' ||
+        p.luxury === true
+      )
+
     case 'new_projects':
       return p.listingCategory === 'new_projects'
+
     case 'rent':
       return p.listingCategory === 'rent'
+
     case 'pg':
       return p.listingCategory === 'pg'
+
     default:
       return p.listingCategory === category
   }
 }
 
-function matchesSearch(p: StaticProperty, q: string): boolean {
+/**
+ * Match free-text search.
+ */
+function matchesSearch(
+  p: StaticProperty,
+  q: string,
+): boolean {
   const haystack = [
-    p.title, p.projectName, p.builder, p.locality, p.sector, p.city,
-    p.configuration, p.propertyType, p.address, p.description,
-  ].join(' ').toLowerCase()
+    p.title,
+    p.projectName,
+    p.builder,
+    p.locality,
+    p.sector,
+    p.city,
+    p.configuration,
+    p.propertyType,
+    p.address,
+    p.description,
+  ]
+    .join(' ')
+    .toLowerCase()
+
   return haystack.includes(q.toLowerCase())
 }
 
-/** All demo properties matching filters (no pagination slice). */
-export function queryAllStaticProperties(params?: PropertyQuery): Property[] {
+/**
+ * Return all static/demo properties matching filters.
+ *
+ * If properties.json is missing, this returns [].
+ */
+export function queryAllStaticProperties(
+  params?: PropertyQuery,
+): Property[] {
   return queryStaticProperties({
     ...params,
     page: 1,
@@ -123,194 +322,433 @@ export function queryAllStaticProperties(params?: PropertyQuery): Property[] {
   }).data
 }
 
-export function queryStaticProperties(params?: PropertyQuery): {
+/**
+ * Query static/demo properties.
+ *
+ * If properties.json is missing, CACHE is empty,
+ * so this safely returns no properties.
+ */
+export function queryStaticProperties(
+  params?: PropertyQuery,
+): {
   data: Property[]
   meta: PaginationMeta
 } {
   let results = [...CACHE]
+
   const page = params?.page ?? 1
   const limit = params?.limit ?? 100
 
   if (params?.search) {
-    results = results.filter((p) => matchesSearch(p, params.search!))
+    results = results.filter((p) =>
+      matchesSearch(
+        p,
+        params.search!,
+      ),
+    )
   }
 
-  if (params?.category && params.category !== 'buy') {
-    results = results.filter((p) => matchesCategory(p, params.category!))
+  if (
+    params?.category &&
+    params.category !== 'buy'
+  ) {
+    results = results.filter((p) =>
+      matchesCategory(
+        p,
+        params.category!,
+      ),
+    )
   }
 
   if (params?.city) {
     results = results.filter((p) =>
-      p.city.toLowerCase().includes(params.city!.toLowerCase()),
+      p.city
+        .toLowerCase()
+        .includes(
+          params.city!.toLowerCase(),
+        ),
     )
   }
 
   if (params?.locality) {
-    const loc = normalizeLocalityParam(params.locality)
+    const loc =
+      normalizeLocalityParam(
+        params.locality,
+      )
+
     results = results.filter((p) =>
-      p.locality.toLowerCase().includes(loc.toLowerCase()),
+      p.locality
+        .toLowerCase()
+        .includes(
+          loc.toLowerCase(),
+        ),
     )
   }
 
   if (params?.sector) {
     results = results.filter((p) =>
-      p.sector.toLowerCase().includes(params.sector!.toLowerCase()),
+      p.sector
+        .toLowerCase()
+        .includes(
+          params.sector!.toLowerCase(),
+        ),
     )
   }
 
   if (params?.pincode) {
     results = results.filter((p) =>
-      p.pincode.includes(params.pincode!),
+      p.pincode.includes(
+        params.pincode!,
+      ),
     )
   }
 
   if (params?.landmark) {
-    const landmark = params.landmark.toLowerCase()
+    const landmark =
+      params.landmark.toLowerCase()
+
     results = results.filter((p) =>
-      [p.address, ...p.highlights, p.sector, p.locality].some((field) =>
-        field?.toLowerCase().includes(landmark),
+      [
+        p.address,
+        ...p.highlights,
+        p.sector,
+        p.locality,
+      ].some((field) =>
+        field
+          ?.toLowerCase()
+          .includes(landmark),
       ),
     )
   }
 
   if (params?.minPrice) {
-    results = results.filter((p) => p.price >= Number(params.minPrice))
+    results = results.filter(
+      (p) =>
+        p.price >=
+        Number(params.minPrice),
+    )
   }
 
   if (params?.maxPrice) {
-    results = results.filter((p) => p.price <= Number(params.maxPrice))
+    results = results.filter(
+      (p) =>
+        p.price <=
+        Number(params.maxPrice),
+    )
   }
 
   if (params?.minArea) {
-    results = results.filter((p) => p.areaSqft >= Number(params.minArea))
+    results = results.filter(
+      (p) =>
+        p.areaSqft >=
+        Number(params.minArea),
+    )
   }
 
   if (params?.maxArea) {
-    results = results.filter((p) => p.areaSqft <= Number(params.maxArea))
+    results = results.filter(
+      (p) =>
+        p.areaSqft <=
+        Number(params.maxArea),
+    )
   }
 
   if (params?.bedrooms) {
-    const beds = Number(params.bedrooms)
-    results = results.filter((p) => p.bedrooms === beds)
+    const beds =
+      Number(params.bedrooms)
+
+    results = results.filter(
+      (p) =>
+        p.bedrooms === beds,
+    )
   }
 
   if (params?.bhk?.length) {
-    results = results.filter((p) => matchesBhk(p, params.bhk!))
+    results = results.filter((p) =>
+      matchesBhk(
+        p,
+        params.bhk!,
+      ),
+    )
   }
 
   if (params?.propertyTypes?.length) {
     results = results.filter((p) =>
-      params.propertyTypes!.some((t) => matchesPropertyType(p, t)),
+      params.propertyTypes!.some(
+        (t) =>
+          matchesPropertyType(
+            p,
+            t,
+          ),
+      ),
     )
   }
 
   if (params?.amenities?.length) {
     results = results.filter((p) =>
-      params.amenities!.some((a) =>
-        p.amenities.some((pa) => pa.toLowerCase().includes(a.toLowerCase())),
+      params.amenities!.some(
+        (a) =>
+          p.amenities.some(
+            (pa) =>
+              pa
+                .toLowerCase()
+                .includes(
+                  a.toLowerCase(),
+                ),
+          ),
       ),
     )
   }
 
   if (params?.propertyAge?.length) {
-    const ageMap: Record<string, string> = {
-      'Under Construction': 'under_construction',
-      'Ready To Move': 'ready_to_move',
+    const ageMap: Record<
+      string,
+      string
+    > = {
+      'Under Construction':
+        'under_construction',
+      'Ready To Move':
+        'ready_to_move',
       New: 'new',
-      '1-5 Years': '1_5_years',
-      '5-10 Years': '5_10_years',
-      '10+ Years': '10_plus_years',
+      '1-5 Years':
+        '1_5_years',
+      '5-10 Years':
+        '5_10_years',
+      '10+ Years':
+        '10_plus_years',
     }
-    const ages = params.propertyAge.map((a) => ageMap[a] ?? a)
-    results = results.filter((p) => ages.includes(p.propertyAge))
+
+    const ages =
+      params.propertyAge.map(
+        (a) =>
+          ageMap[a] ?? a,
+      )
+
+    results = results.filter(
+      (p) =>
+        ages.includes(
+          p.propertyAge,
+        ),
+    )
   }
 
   if (params?.status) {
-    const s = params.status.toLowerCase().replace(/ /g, '_')
-    results = results.filter((p) => p.status.toLowerCase() === s || p.status.toLowerCase().includes(s))
+    const s =
+      params.status
+        .toLowerCase()
+        .replace(/ /g, '_')
+
+    results = results.filter(
+      (p) =>
+        p.status
+          .toLowerCase() === s ||
+        p.status
+          .toLowerCase()
+          .includes(s),
+    )
   }
 
   if (params?.builder) {
     results = results.filter((p) =>
-      p.builder.toLowerCase().includes(params.builder!.toLowerCase()),
+      p.builder
+        .toLowerCase()
+        .includes(
+          params.builder!
+            .toLowerCase(),
+        ),
     )
   }
 
-  const ext = params as { featured?: boolean; reraOnly?: boolean; readyToMove?: boolean; underConstruction?: boolean; possessionYear?: string }
+  const ext = params as {
+    featured?: boolean
+    reraOnly?: boolean
+    readyToMove?: boolean
+    underConstruction?: boolean
+    possessionYear?: string
+  }
 
   if (ext.featured) {
-    results = results.filter((p) => p.featured)
+    results = results.filter(
+      (p) => p.featured,
+    )
   }
 
   if (ext.reraOnly) {
-    results = results.filter((p) => p.rera)
+    results = results.filter(
+      (p) => p.rera,
+    )
   }
 
   if (ext.readyToMove) {
-    results = results.filter((p) => p.propertyAge === 'ready_to_move')
+    results = results.filter(
+      (p) =>
+        p.propertyAge ===
+        'ready_to_move',
+    )
   }
 
   if (ext.underConstruction) {
-    results = results.filter((p) => p.propertyAge === 'under_construction')
+    results = results.filter(
+      (p) =>
+        p.propertyAge ===
+        'under_construction',
+    )
   }
 
   if (ext.possessionYear) {
-    results = results.filter((p) => p.possession.includes(ext.possessionYear!))
+    results = results.filter(
+      (p) =>
+        p.possession.includes(
+          ext.possessionYear!,
+        ),
+    )
   }
 
+  /**
+   * Sorting
+   */
   if (params?.sortBy === 'price') {
     results.sort((a, b) =>
-      params.sortOrder === 'asc' ? a.price - b.price : b.price - a.price,
+      params.sortOrder === 'asc'
+        ? a.price - b.price
+        : b.price - a.price,
     )
-  } else if (params?.sortBy === 'area') {
+  } else if (
+    params?.sortBy === 'area'
+  ) {
     results.sort((a, b) =>
-      params.sortOrder === 'asc' ? a.areaSqft - b.areaSqft : b.areaSqft - a.areaSqft,
+      params.sortOrder === 'asc'
+        ? a.areaSqft -
+          b.areaSqft
+        : b.areaSqft -
+          a.areaSqft,
     )
-  } else if (params?.sortBy === 'newest') {
-    results.sort((a, b) => b.id.localeCompare(a.id))
+  } else if (
+    params?.sortBy === 'newest'
+  ) {
+    results.sort((a, b) =>
+      b.id.localeCompare(
+        a.id,
+      ),
+    )
   } else {
-    results.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0) || b.price - a.price)
+    results.sort(
+      (a, b) =>
+        (b.featured ? 1 : 0) -
+          (a.featured ? 1 : 0) ||
+        b.price - a.price,
+    )
   }
 
-  const total = results.length
-  const totalPages = Math.ceil(total / limit) || 1
-  const start = (page - 1) * limit
-  const slice = results.slice(start, start + limit)
+  const total =
+    results.length
+
+  const totalPages =
+    Math.ceil(
+      total / limit,
+    ) || 1
+
+  const start =
+    (page - 1) * limit
+
+  const slice =
+    results.slice(
+      start,
+      start + limit,
+    )
 
   return {
-    data: slice.map(staticToProperty),
+    data: slice.map(
+      staticToProperty,
+    ),
+
     meta: {
       page,
       limit,
       total,
       totalPages,
-      hasNext: page < totalPages,
-      hasPrev: page > 1,
+      hasNext:
+        page < totalPages,
+      hasPrev:
+        page > 1,
     },
   }
 }
 
-export function getStaticPropertyById(id: string): Property | null {
-  const found = CACHE.find((p) => p.id === id || p.slug === id)
-  return found ? staticToProperty(found) : null
+/**
+ * Find a static/demo property by
+ * ID or slug.
+ *
+ * Returns null when the local
+ * inventory is empty.
+ */
+export function getStaticPropertyById(
+  id: string,
+): Property | null {
+  const found =
+    CACHE.find(
+      (p) =>
+        p.id === id ||
+        p.slug === id,
+    )
+
+  return found
+    ? staticToProperty(found)
+    : null
 }
 
 const SECTION_LIMIT = 6
 
-function pickByProjects(projectNames: string[]): StaticProperty[] {
-  const picked: StaticProperty[] = []
-  for (const name of projectNames) {
-    const match = CACHE.find(
-      (p) => p.projectName === name || p.projectName.toLowerCase().includes(name.toLowerCase()),
-    )
-    if (match && !picked.some((p) => p.id === match.id)) picked.push(match)
+/**
+ * Pick properties by project name.
+ */
+function pickByProjects(
+  projectNames: string[],
+): StaticProperty[] {
+  const picked: StaticProperty[] =
+    []
+
+  for (
+    const name of projectNames
+  ) {
+    const match =
+      CACHE.find(
+        (p) =>
+          p.projectName ===
+            name ||
+          p.projectName
+            .toLowerCase()
+            .includes(
+              name.toLowerCase(),
+            ),
+      )
+
+    if (
+      match &&
+      !picked.some(
+        (p) =>
+          p.id === match.id,
+      )
+    ) {
+      picked.push(match)
+    }
   }
-  return picked.slice(0, SECTION_LIMIT)
+
+  return picked.slice(
+    0,
+    SECTION_LIMIT,
+  )
 }
 
 const HOMEPAGE_PROPERTY_LIMIT = 6
 
-/** Exactly 6 curated properties for the homepage — full inventory lives on /properties */
+/**
+ * Returns up to 6 curated
+ * local/demo properties.
+ *
+ * If properties.json is missing,
+ * this returns [].
+ */
 export function getHomepageFeaturedProperties(): StaticProperty[] {
   return pickByProjects([
     'DLF Camellias',
@@ -319,12 +757,22 @@ export function getHomepageFeaturedProperties(): StaticProperty[] {
     'M3M Mansion',
     'Paras Quartier',
     'Trump Towers Gurgaon',
-  ]).slice(0, HOMEPAGE_PROPERTY_LIMIT)
+  ]).slice(
+    0,
+    HOMEPAGE_PROPERTY_LIMIT,
+  )
 }
 
-/** @deprecated Use getHomepageFeaturedProperties — homepage shows 6 properties total */
+/**
+ * @deprecated
+ *
+ * Kept for backwards compatibility
+ * with existing components.
+ */
 export function getHomepageCollections() {
-  const featured = getHomepageFeaturedProperties()
+  const featured =
+    getHomepageFeaturedProperties()
+
   return {
     featured,
     oldGurgaon: featured,
@@ -334,9 +782,36 @@ export function getHomepageCollections() {
   }
 }
 
-export function normalizeLocalityParam(locality: string): string {
-  if (locality === 'old-gurgaon' || locality === 'old_gurgaon') return 'Old Gurgaon'
-  return locality.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+/**
+ * Normalize locality parameters.
+ */
+export function normalizeLocalityParam(
+  locality: string,
+): string {
+  if (
+    locality ===
+      'old-gurgaon' ||
+    locality ===
+      'old_gurgaon'
+  ) {
+    return 'Old Gurgaon'
+  }
+
+  return locality
+    .replace(/-/g, ' ')
+    .replace(
+      /\b\w/g,
+      (c) =>
+        c.toUpperCase(),
+    )
 }
 
-export const STATIC_PROPERTY_COUNT = CACHE.length
+/**
+ * Number of locally loaded
+ * properties.
+ *
+ * Returns 0 when
+ * properties.json is absent.
+ */
+export const STATIC_PROPERTY_COUNT =
+  CACHE.length

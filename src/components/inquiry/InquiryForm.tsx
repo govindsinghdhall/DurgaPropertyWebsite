@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useMutation } from '@tanstack/react-query'
 import { inquiriesService } from '@/api/services/inquiries.service'
-import { notifyLeadByEmail } from '@/api/services/lead-email.service'
+// import { notifyLeadByEmail } from '@/api/services/lead-email.service'
 import { getErrorMessage } from '@/api/client'
 import { useToast } from '@/components/ui/Toast'
 import {
@@ -49,41 +49,73 @@ export function InquiryForm({ propertyId, propertyTitle, compact = false }: Inqu
     resolver: zodResolver(schema),
   })
 
+  // const mutation = useMutation({
+  //   mutationFn: async (variables: InquiryPayload) => {
+  //     try {
+  //       const data = await inquiriesService.submit(variables)
+  //       try {
+  //         await notifyLeadByEmail({
+  //           payload: variables,
+  //           referenceId: data.id,
+  //           propertyTitle,
+  //         })
+  //       } catch {
+  //         /* CRM saved the lead; FormSubmit email is best-effort */
+  //       }
+  //       return data
+  //     } catch {
+  //       await notifyLeadByEmail({
+  //         payload: variables,
+  //         propertyTitle,
+  //       })
+  //       return {
+  //         id: `email-${Date.now()}`,
+  //         message: 'Your inquiry was emailed to our team.',
+  //       }
+  //     }
+  //   },
+  //   onSuccess: (data, variables) => {
+  //     setSuccess({ referenceId: data.id, payload: variables })
+  //     setCountdown(WHATSAPP_REDIRECT_SECONDS)
+  //     reset()
+  //     showToast({
+  //       type: 'success',
+  //       title: 'Inquiry captured successfully',
+  //       message: 'Your details are saved. Connect with us on WhatsApp or call now.',
+  //     })
+  //   },
+  //   onError: (err) => {
+  //     showToast({
+  //       type: 'error',
+  //       title: 'Failed to save inquiry',
+  //       message: getErrorMessage(err),
+  //     })
+  //   },
+  // })
+
   const mutation = useMutation({
     mutationFn: async (variables: InquiryPayload) => {
-      try {
-        const data = await inquiriesService.submit(variables)
-        try {
-          await notifyLeadByEmail({
-            payload: variables,
-            referenceId: data.id,
-            propertyTitle,
-          })
-        } catch {
-          /* CRM saved the lead; FormSubmit email is best-effort */
-        }
-        return data
-      } catch {
-        await notifyLeadByEmail({
-          payload: variables,
-          propertyTitle,
-        })
-        return {
-          id: `email-${Date.now()}`,
-          message: 'Your inquiry was emailed to our team.',
-        }
-      }
+      // CRM is the single source of truth for lead creation.
+      // Do not fall back to FormSubmit or fabricate a lead ID.
+      return await inquiriesService.submit(variables)
     },
+  
     onSuccess: (data, variables) => {
-      setSuccess({ referenceId: data.id, payload: variables })
+      setSuccess({
+        referenceId: data.id,
+        payload: variables,
+      })
+  
       setCountdown(WHATSAPP_REDIRECT_SECONDS)
       reset()
+  
       showToast({
         type: 'success',
         title: 'Inquiry captured successfully',
         message: 'Your details are saved. Connect with us on WhatsApp or call now.',
       })
     },
+  
     onError: (err) => {
       showToast({
         type: 'error',
@@ -92,7 +124,7 @@ export function InquiryForm({ propertyId, propertyTitle, compact = false }: Inqu
       })
     },
   })
-
+  
   const whatsappMessage = success
     ? buildInquiryWhatsAppMessage({
         firstName: success.payload.firstName,
