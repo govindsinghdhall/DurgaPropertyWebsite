@@ -1,0 +1,74 @@
+You are cloning a consumer real-estate website from an existing React + Vite + TypeScript app.
+
+Read these first (do not invent a different API):
+  1. docs/backend-public-api.txt     — exact public endpoints, envelopes, payloads
+  2. The reference frontend at /Users/govinddhall/Desktop/RealEstateWebsite
+  3. Optional backend at /Users/govinddhall/Desktop/RealEstateBackend for field truth
+
+GOAL
+Generate a visually distinct branded site with THE SAME functionality:
+  browse/search/filter properties, property detail, compare, contact/inquiry,
+  lead capture into CRM, optional FormSubmit email, WhatsApp CTA after submit.
+
+INPUTS I WILL PROVIDE (fill these in before running)
+  Backend base cURL / URL:
+    ________________________________
+    Strip to origin + /api/v1 and set VITE_API_BASE_URL.
+
+  Inquiry cURL (include headers):
+    ________________________________
+    If x-website-api-key is present, set VITE_WEBSITE_API_KEY.
+
+  organizationId:
+    ________________________________
+  Send as query organizationId on every /public/* request (VITE_ORGANIZATION_ID).
+  Send x-website-api-key on every /public/* request (VITE_WEBSITE_API_KEY).
+  Inquiry POST requires the API key. Key and organizationId must refer to the
+  same organization or the API returns 403.
+
+  Brand
+    Site name: ________
+    Logo / colors: ________
+    Phone E.164: ________
+    Display phone: ________
+    Contact email (FormSubmit To): ________
+    Lead CC email: ________
+    WhatsApp number: ________
+    Cities / default location copy: ________
+
+HARD RULES
+- Use only these CRM calls unless I approve more:
+    GET  {BASE}/public/properties
+    GET  {BASE}/public/properties/:id
+    GET  {BASE}/public/builders
+    GET  {BASE}/public/stats
+    POST {BASE}/public/inquiries
+- Keep the JSON envelope { success, message?, data, meta? }.
+- Keep inquiry body: firstName, lastName, phone required; email, city,
+  message, budget, propertyId optional. Treat data.id as the lead reference.
+- Map UI filter labels to the enums in backend-public-api.txt.
+- If a public GET fails, fall back to local/demo inventory like the reference
+  app. Inquiry should still try FormSubmit if CRM fails.
+- Do not put secrets in git. Use .env / .env.example.
+- Always send VITE_ORGANIZATION_ID as query organizationId and
+  VITE_WEBSITE_API_KEY as x-website-api-key from the shared Axios client.
+- Never mix tenants. Conflict of key vs organizationId is 403.
+
+IMPLEMENTATION SHAPE (match the reference unless I say otherwise)
+  src/api/client.ts              axios instance + optional website API key header
+  src/api/services/properties.service.ts
+  src/api/services/public.service.ts
+  src/api/services/inquiries.service.ts
+  src/api/services/lead-email.service.ts
+  src/types/index.ts             Property, InquiryPayload, ApiEnvelope
+  Brand constants in src/constants/contact.ts (or equivalent)
+
+OUTPUT
+- A working Vite React site (or a patch on the reference repo if I say "clone this repo").
+- .env.example with VITE_API_BASE_URL and VITE_WEBSITE_API_KEY.
+- Short README: how to point at a new backend and what still is NOT multi-tenant.
+- If tenancy was not implemented, a one-paragraph warning at the top of the README.
+
+When I paste cURLs, extract host, path, query, headers, and JSON body and map
+them onto the contract above. If a cURL does not match, ask — do not silently
+invent extra endpoints.

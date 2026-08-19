@@ -1,0 +1,291 @@
+================================================================================
+PUBLIC BACKEND API — RealEstateWebsite
+================================================================================
+Use this file as the contract when cloning a consumer real-estate site that
+talks to RealEstateBackend (/api/v1).
+
+Companion file: docs/clone-website-prompt.txt  (paste that prompt into an AI)
+
+Reference implementations
+  Frontend: /Users/govinddhall/Desktop/RealEstateWebsite
+  Backend:  /Users/govinddhall/Desktop/RealEstateBackend
+
+Current production base (this Durga site)
+  https://brisavorealestatebackend-1.onrender.com/api/v1
+
+================================================================================
+TENANCY (PER REQUEST)
+================================================================================
+Public routes resolve organization PER HTTP REQUEST. They do NOT use
+PUBLIC_ORGANIZATION_SLUG.
+
+Identifiers
+  Header: x-website-api-key  -> Organization.settings.websiteApiKey
+  Query:  organizationId     -> Organization._id  (GET and POST query string)
+
+Rules
+  1. Key + organizationId, same org     -> allow
+  2. Key + organizationId, different    -> 403 Forbidden (never pick one)
+  3. Key only                           -> allow (GET and inquiry)
+  4. organizationId only                -> allow GET only
+  5. organizationId only on inquiry     -> 401 (key required)
+  6. Neither                            -> GET 400, inquiry 401
+
+Every Mongo query for public properties/builders/stats/inquiries is scoped
+with organizationId = resolvedOrganizationId.
+
+Cross-tenant property id  -> 404 (not 403, do not leak other tenants)
+Inquiry propertyId must belong to the resolved org or the request is rejected.
+
+Frontend env
+  VITE_API_BASE_URL
+  VITE_WEBSITE_API_KEY     sent on every /public/* request
+  VITE_ORGANIZATION_ID     sent as query organizationId on every /public/* request
+
+================================================================================
+ENV (FRONTEND)
+================================================================================
+VITE_API_BASE_URL     required   e.g. https://HOST/api/v1
+VITE_WEBSITE_API_KEY  optional   sent only on POST /public/inquiries
+
+Axios client: src/api/client.ts
+  baseURL = VITE_API_BASE_URL
+  timeout 30000
+  Content-Type: application/json
+  Relative image URLs: strip "/api/v1" from base and prefix the path.
+
+================================================================================
+RESPONSE ENVELOPE
+================================================================================
+Success (single)
+  { "success": true, "message": "...", "data": <object> }
+
+Success (list)
+  {
+    "success": true,
+    "data": [ ... ],
+    "meta": {
+      "page": 1,
+      "limit": 100,
+      "total": 42,
+      "totalPages": 1,
+      "hasNext": false,
+      "hasPrev": false
+    }
+  }
+
+Error
+  { "success": false, "message": "...", "errors": [ { "message": "..." } ] }
+
+Frontend getErrorMessage uses errors[].message then message.
+
+================================================================================
+1) LIST PROPERTIES
+================================================================================
+GET /public/properties
+
+Used for: home, listings, search, filters, compare, similar properties.
+Frontend: properties.service.ts getAll — loops page=1..50, limit=100, until
+meta.hasNext is false, then merges local demo inventory.
+
+cURL
+  curl -sS "${BASE}/public/properties?page=1&limit=100&sortBy=price&sortOrder=desc"
+
+Query params the frontend actually sends
+  page, limit
+  sortBy          price | area | newest | createdAt
+  sortOrder       asc | desc
+  search
+  category        omitted when "buy"; else rent | commercial | new_projects | pg | plot | luxury
+  city, locality, sector, pincode, landmark
+  minPrice, maxPrice, minArea, maxArea
+  bedrooms
+  status          spaces -> underscores
+  type            comma list of API enums (apartment,villa,...)
+  bhk             comma list (studio,1_bhk,2_bhk,3_bhk,4_bhk,5_plus_bhk)
+  amenities       comma list (gym,swimming_pool,...)
+  propertyAge, furnishing, facing, possessionStatus
+
+Backend also accepts (frontend query object has them, but they are NOT sent):
+  builder, featured, reraOnly, readyToMove, underConstruction, possessionYear
+  Those only affect local/demo merge on the website.
+
+data[] = Property objects (see PROPERTY OBJECT below).
+
+================================================================================
+2) GET ONE PROPERTY
+================================================================================
+GET /public/properties/:id
+
+Used for: property detail page.
+Frontend: getById, timeout 5s, fallback to local demo if fail/not found.
+
+cURL
+  curl -sS "${BASE}/public/properties/PROPERTY_ID"
+
+data = one Property. 404 -> Property not found.
+
+================================================================================
+3) LIST BUILDERS
+================================================================================
+GET /public/builders
+
+Used for: listing sidebar builder filter.
+Frontend: public.service.ts getBuilders — merges API with local demo names.
+
+cURL
+  curl -sS "${BASE}/public/builders"
+
+data: [ { "name": "DLF", "count": 12 }, ... ]
+
+================================================================================
+4) STATS
+================================================================================
+GET /public/stats
+
+Used for: home stats bar "total properties" only. Other stats are hardcoded.
+
+cURL
+  curl -sS "${BASE}/public/stats"
+
+data: { "totalProperties": 120 }
+
+================================================================================
+5) CREATE INQUIRY (LEAD)
+================================================================================
+POST /public/inquiries
+
+Used for: home, contact, property-detail lead forms.
+Frontend: inquiries.service.ts submit.
+Then FormSubmit email (best-effort). Then WhatsApp redirect (not an API).
+
+cURL
+  curl -sS -X POST "${BASE}/public/inquiries" \
+    -H "Content-Type: application/json" \
+    -H "x-website-api-key: WEBSITE_API_KEY" \
+    -d '{
+      "firstName": "Asha",
+      "lastName": "Khan",
+      "phone": "9810000000",
+      "email": "asha@example.com",
+      "city": "Gurugram",
+      "message": "Site visit",
+      "budget": 8500000,
+      "propertyId": "PROPERTY_ID"
+    }'
+
+Required: firstName, lastName, phone (min 10 chars)
+Optional: email, city, message, budget (number INR), propertyId
+
+Success (HTTP 201): data { "id": "<leadId>", "message": "..." }
+Frontend requires success=true AND data.id.
+
+Backend maps to CRM lead:
+  source type WEBSITE (or name "Website")
+  createdBy first active admin of the resolved public org
+  status NEW
+  If propertyId set, property must belong to that same public org.
+
+================================================================================
+PROPERTY OBJECT (what the UI needs)
+================================================================================
+id, title, description
+listingCategory     buy | rent | commercial | new_projects | pg | plot | luxury
+type, status
+price, pricePerSqFt, area, carpetArea, builtUpArea, superArea
+bedrooms, bathrooms, configuration
+address, city, state, pincode, locality, sector, landmark
+latitude, longitude
+builderName, projectName, propertyAge, furnishing, facing
+possessionStatus, possessionDate, roiPotential
+postedBy            backend currently hardcodes "Durga Property"
+isVerified, hasRera, reraId, featured, luxury
+hasVideoTour, videoTourUrl, virtualTourUrl, brochureUrl
+amenities[], highlights[]
+nearbySchools[], nearbyHospitals[], nearbyMetroStations[]
+images[]            { id, url, isPrimary, caption }
+                    relative url -> {API host without /api/v1}{url}
+
+Backend serializePublicProperty currently returns images: [] and a subset of
+fields. Extra fields are tolerated. Missing numbers default to 0; locality
+falls back to city; listingCategory defaults to buy.
+
+================================================================================
+UI LABEL -> API ENUM MAP (frontend filtersToApiParams)
+================================================================================
+Property types
+  Apartment -> apartment
+  Builder Floor -> builder_floor
+  Villa -> villa
+  Independent House -> independent_house
+  Plot -> plot
+  Commercial / Office / Shop / Warehouse / Coworking Space -> matching snake
+
+BHK
+  Studio -> studio
+  1 BHK -> 1_bhk ... 4 BHK -> 4_bhk
+  5+ BHK -> 5_plus_bhk
+
+Age
+  Under Construction -> under_construction
+  Ready To Move -> ready_to_move
+  New -> new
+  1-5 Years -> 1_5_years
+  5-10 Years -> 5_10_years
+  10+ Years -> 10_plus_years
+
+Furnishing
+  Fully Furnished -> fully_furnished
+  Semi Furnished -> semi_furnished
+  Unfurnished -> unfurnished
+
+Facing: North/South/East/West -> north/south/east/west
+
+Possession
+  Immediate -> immediate
+  Within 3 Months -> within_3_months
+  Within 6 Months -> within_6_months
+  Within 1 Year -> within_1_year
+
+Amenities
+  Swimming Pool -> swimming_pool
+  Gym -> gym
+  Club House -> club_house
+  Power Backup -> power_backup
+  Lift, Parking, Security, Garden as lowercase
+  Kids Play Area -> kids_play_area
+  EV Charging -> ev_charging
+
+================================================================================
+NON-CRM HTTP (same product behavior)
+================================================================================
+POST https://formsubmit.co/ajax/{CONTACT_EMAIL}
+  After CRM save (best-effort) or fallback if CRM POST fails.
+  JSON: _subject, _template=table, _captcha=false, _cc, Name, Phone, Email,
+        City, Budget, Property, Message, Reference
+
+https://wa.me/{E164}?text=...
+  Browser opens ~3s after successful inquiry. Not an API.
+
+Broken images -> Unsplash / inline SVG placeholders by property type.
+
+================================================================================
+PAGES THIS API SET POWERS
+================================================================================
+/                 home, featured listings, inquiry, stats
+/properties       filtered inventory
+/properties/:id   detail + inquiry
+/compare          listings
+/contact          inquiry
+/tools            calculators (local, no API)
+
+================================================================================
+CLONE CHECKLIST
+================================================================================
+1. Working GET listings cURL  -> VITE_API_BASE_URL (must end /api/v1)
+2. Inquiry cURL + x-website-api-key if any  -> VITE_WEBSITE_API_KEY
+3. Brand: phone, email, WhatsApp E.164, logo, copy
+4. organizationId / slug — ONLY works after public APIs resolve org per request
+5. Confirm envelope + Property fields; listings + inquiry = core product
+6. Builders + stats may fail; frontend already falls back to local data
+================================================================================
