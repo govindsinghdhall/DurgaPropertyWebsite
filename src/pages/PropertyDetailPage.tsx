@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { propertiesService } from '@/api/services/properties.service'
@@ -12,10 +12,12 @@ import { usePropertyStore } from '@/context/PropertyStoreContext'
 import { normalizeProperty, normalizeProperties, getSimilarProperties } from '@/utils/property'
 import { formatCurrency, formatListingPrice, formatLabel } from '@/utils/formatters'
 import { calculateEMI } from '@/utils/calculators'
+import { PropertyPhotoGallery } from '@/components/properties/PropertyPhotoGallery'
 
 export function PropertyDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { addViewed } = usePropertyStore()
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false)
 
   const { data: property, isLoading, isError } = useQuery({
     queryKey: ['property', id],
@@ -66,9 +68,19 @@ export function PropertyDetailPage() {
       <div className="mt-6 grid gap-10 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-8">
           {/* Gallery */}
-          <PropertyGallery images={enriched.images ?? []} title={enriched.title} />
+          <div className="relative">
+            <PropertyGallery images={enriched.images ?? []} title={enriched.title} />
+            <button
+              type="button"
+              onClick={() => setIsGalleryOpen(true)}
+              className="absolute bottom-4 right-4 rounded-full bg-black/60 px-3 py-2 text-white hover:bg-black/80"
+              aria-label="View all photos"
+            >
+              View all photos
+            </button>
+          </div>
 
-          {/* Video / 360 badges */}
+          {/* Rest of the component remains unchanged */}
           <div className="flex flex-wrap gap-2">
             {enriched.hasVideoTour && (
               <span className="rounded-full bg-red-50 px-4 py-1.5 text-sm font-semibold text-red-700">▶ Video Tour</span>
@@ -213,6 +225,15 @@ export function PropertyDetailPage() {
             ))}
           </div>
         </section>
+      )}
+
+      {/* Photo Gallery Modal */}
+      {isGalleryOpen && (
+        <PropertyPhotoGallery 
+          images={enriched.images ?? []} 
+          title={enriched.title}
+          onClose={() => setIsGalleryOpen(false)} 
+        />
       )}
     </div>
   )
